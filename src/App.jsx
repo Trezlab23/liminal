@@ -497,7 +497,7 @@ export default function App() {
 
               {quizAnswer !== null && (
                 <div style={{ marginTop:20, position:"relative", zIndex:1 }}>
-                  <div style={{ textAlign:"center", marginBottom:12, fontSize:13, color:quizAnswer===lesson.quiz?.answerIndex?C.green:C.textMuted, fontStyle:"italic", fontFamily:"Cormorant Garamond", fontSize:16 }}>
+                  <div style={{ textAlign:"center", marginBottom:12, color:quizAnswer===lesson.quiz?.answerIndex?C.green:C.textMuted, fontStyle:"italic", fontFamily:"Cormorant Garamond", fontSize:16 }}>
                     {quizAnswer===lesson.quiz?.answerIndex ? "+20 XP — well done." : "Keep exploring — understanding deepens over time."}
                   </div>
                   <button className="btn-main" onClick={() => setScreen("done")}>Complete session</button>
@@ -514,7 +514,7 @@ export default function App() {
               <div style={{ position:"relative", zIndex:1, width:"100%" }}>
                 <div style={{ fontFamily:"Cormorant Garamond", fontSize:56, color:C.accent, marginBottom:14, lineHeight:1, textShadow:`0 0 40px ${C.accentGlow}` }}>◈</div>
                 <div style={{ fontFamily:"Cormorant Garamond", fontWeight:300, fontSize:28, color:C.text, marginBottom:6 }}>Session complete.</div>
-                <div style={{ color:C.textMuted, fontSize:13, marginBottom:28, fontStyle:"italic", fontFamily:"Cormorant Garamond", fontSize:16 }}>Another moment well spent.</div>
+                <div style={{ color:C.textMuted, marginBottom:28, fontStyle:"italic", fontFamily:"Cormorant Garamond", fontSize:16 }}>Another moment well spent.</div>
 
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
                   {[
