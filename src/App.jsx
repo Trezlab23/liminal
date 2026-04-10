@@ -407,11 +407,16 @@ export default function App() {
 
           {/* ── LESSON ── */}
           {screen === "lesson" && lesson && (
-            <Screen style={{ padding:"0", position:"relative", display:"flex", flexDirection:"column" }}>
-              <div style={{ flex:1, overflowY:"auto", padding:"20px 26px 0", position:"relative" }}>
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              animation: "fadeUp 0.45s cubic-bezier(.22,.68,0,1.2) forwards",
+              overflow: "hidden",
+            }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px 26px 20px", position: "relative" }}>
                 <GlowOrb top={-50} left={160} color={topicGlow} size={200} />
 
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexShrink:0, position:"relative", zIndex:1 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, position:"relative", zIndex:1 }}>
                   <button onClick={() => setScreen("time")} style={{ background:"none", border:"none", color:C.textMuted, fontSize:13, cursor:"pointer", padding:0 }}>← Exit</button>
                   <div style={{ fontSize:11, color:C.textMuted, letterSpacing:.8 }}>{selectedTime?.label} read</div>
                 </div>
@@ -433,7 +438,7 @@ export default function App() {
 
                 <div style={{ height:1, background:`linear-gradient(90deg, ${topicColor}44, transparent)`, marginBottom:18, position:"relative", zIndex:1 }} />
 
-                <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1, paddingBottom:20 }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1 }}>
                   {/* Hook */}
                   <div style={{ borderLeft:`2px solid ${topicColor}`, paddingLeft:16, boxShadow:`-4px 0 12px ${topicGlow}` }}>
                     <div style={{ fontFamily:"Cormorant Garamond", fontSize:20, fontStyle:"italic", color:C.text, lineHeight:1.5 }}>{lesson.hook}</div>
@@ -456,11 +461,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Pinned button */}
-              <div style={{ flexShrink:0, padding:"12px 26px 28px", position:"relative", zIndex:1, background:`linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
+              {/* Pinned button — always visible at bottom */}
+              <div style={{ flexShrink: 0, padding: "12px 26px 28px", position: "relative", zIndex: 1, background: `linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
                 <button className="btn-main" onClick={() => setScreen("quiz")}>Quick reflection →</button>
               </div>
-            </Screen>
+            </div>
           )}
 
           {/* ── QUIZ ── */}
