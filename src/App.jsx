@@ -407,8 +407,13 @@ export default function App() {
 
           {/* ── LESSON ── */}
           {screen === "lesson" && lesson && (
-            <Screen style={{ padding:"0", position:"relative", display:"flex", flexDirection:"column" }}>
-              <div style={{ flex:1, overflowY:"auto", padding:"20px 26px 0", position:"relative" }}>
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              animation: "fadeUp 0.45s cubic-bezier(.22,.68,0,1.2) forwards",
+              overflow: "hidden",
+            }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px 26px 20px", position: "relative" }}>
                 <GlowOrb top={-50} left={160} color={topicGlow} size={200} />
 
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexShrink:0, position:"relative", zIndex:1 }}>
@@ -500,7 +505,7 @@ export default function App() {
               <div style={{ flexShrink:0, padding:"12px 26px 28px", position:"relative", zIndex:1, background:`linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
                 <button className="btn-main" onClick={() => setScreen("quiz")}>Quick reflection →</button>
               </div>
-            </Screen>
+            </div>
           )}
 
           {/* ── QUIZ ── */}
