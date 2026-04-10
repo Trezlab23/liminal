@@ -407,54 +407,57 @@ export default function App() {
 
           {/* ── LESSON ── */}
           {screen === "lesson" && lesson && (
-            <Screen style={{ padding:"20px 26px 28px", position:"relative" }}>
-              <GlowOrb top={-50} left={160} color={topicGlow} size={200} />
+            <Screen style={{ padding:"0", position:"relative", display:"flex", flexDirection:"column" }}>
+              <div style={{ flex:1, overflowY:"auto", padding:"20px 26px 0", position:"relative" }}>
+                <GlowOrb top={-50} left={160} color={topicGlow} size={200} />
 
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexShrink:0, position:"relative", zIndex:1 }}>
-                <button onClick={() => setScreen("time")} style={{ background:"none", border:"none", color:C.textMuted, fontSize:13, cursor:"pointer", padding:0 }}>← Exit</button>
-                <div style={{ fontSize:11, color:C.textMuted, letterSpacing:.8 }}>{selectedTime?.label} read</div>
-              </div>
-
-              {error && (
-                <div style={{ background:"rgba(180,140,80,.08)", border:`1px solid rgba(180,140,80,.2)`, borderRadius:8, padding:"8px 12px", color:"#B09040", fontSize:12, marginBottom:12, position:"relative", zIndex:1 }}>⚠ {error}</div>
-              )}
-
-              {/* Progress bar */}
-              <div style={{ height:2, background:"rgba(255,235,210,.07)", borderRadius:99, marginBottom:18, overflow:"hidden", position:"relative", zIndex:1 }}>
-                <div style={{ width:"65%", height:"100%", background:`linear-gradient(90deg, ${topicColor}, ${topicColor}88)`, borderRadius:99, boxShadow:`0 0 8px ${topicGlow}` }} />
-              </div>
-
-              <div style={{ marginBottom:16, position:"relative", zIndex:1 }}>
-                <Tag label={lesson.badge} color={topicColor} glow={topicGlow} />
-                <div style={{ fontFamily:"Cormorant Garamond", fontWeight:400, fontSize:26, color:C.text, lineHeight:1.25, marginTop:12 }}>{lesson.title}</div>
-                <div style={{ fontSize:11, color:C.textMuted, marginTop:5, letterSpacing:.5 }}>{topicObj?.icon} {topicObj?.label}</div>
-              </div>
-
-              <div style={{ height:1, background:`linear-gradient(90deg, ${topicColor}44, transparent)`, marginBottom:18, position:"relative", zIndex:1 }} />
-
-              <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1 }}>
-                {/* Hook */}
-                <div style={{ borderLeft:`2px solid ${topicColor}`, paddingLeft:16, boxShadow:`-4px 0 12px ${topicGlow}` }}>
-                  <div style={{ fontFamily:"Cormorant Garamond", fontSize:20, fontStyle:"italic", color:C.text, lineHeight:1.5 }}>{lesson.hook}</div>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexShrink:0, position:"relative", zIndex:1 }}>
+                  <button onClick={() => setScreen("time")} style={{ background:"none", border:"none", color:C.textMuted, fontSize:13, cursor:"pointer", padding:0 }}>← Exit</button>
+                  <div style={{ fontSize:11, color:C.textMuted, letterSpacing:.8 }}>{selectedTime?.label} read</div>
                 </div>
 
-                {/* Body */}
-                <div style={{ color:C.textSub, fontSize:14, lineHeight:1.8, fontWeight:300 }}>{lesson.body}</div>
+                {error && (
+                  <div style={{ background:"rgba(180,140,80,.08)", border:`1px solid rgba(180,140,80,.2)`, borderRadius:8, padding:"8px 12px", color:"#B09040", fontSize:12, marginBottom:12, position:"relative", zIndex:1 }}>⚠ {error}</div>
+                )}
 
-                {/* Insight */}
-                <div className="card-deep" style={{ padding:16 }}>
-                  <div style={{ fontSize:9, color:topicColor, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:8 }}>{lesson.insightLabel}</div>
-                  <div style={{ color:C.text, fontSize:14, lineHeight:1.65, fontWeight:300 }}>{lesson.insight}</div>
+                {/* Progress bar */}
+                <div style={{ height:2, background:"rgba(255,235,210,.07)", borderRadius:99, marginBottom:18, overflow:"hidden", position:"relative", zIndex:1 }}>
+                  <div style={{ width:"65%", height:"100%", background:`linear-gradient(90deg, ${topicColor}, ${topicColor}88)`, borderRadius:99, boxShadow:`0 0 8px ${topicGlow}` }} />
                 </div>
 
-                {/* Apply */}
-                <div style={{ background:`linear-gradient(135deg, rgba(127,174,132,.1) 0%, rgba(255,245,235,.03) 100%)`, border:`1px solid rgba(127,174,132,.2)`, borderRadius:14, padding:16, boxShadow:"inset 0 1px 0 rgba(255,255,255,.04)" }}>
-                  <div style={{ fontSize:9, color:C.green, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:8 }}>Try it</div>
-                  <div style={{ color:C.textSub, fontSize:14, lineHeight:1.65, fontWeight:300 }}>{lesson.apply}</div>
+                <div style={{ marginBottom:16, position:"relative", zIndex:1 }}>
+                  <Tag label={lesson.badge} color={topicColor} glow={topicGlow} />
+                  <div style={{ fontFamily:"Cormorant Garamond", fontWeight:400, fontSize:26, color:C.text, lineHeight:1.25, marginTop:12 }}>{lesson.title}</div>
+                  <div style={{ fontSize:11, color:C.textMuted, marginTop:5, letterSpacing:.5 }}>{topicObj?.icon} {topicObj?.label}</div>
+                </div>
+
+                <div style={{ height:1, background:`linear-gradient(90deg, ${topicColor}44, transparent)`, marginBottom:18, position:"relative", zIndex:1 }} />
+
+                <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1, paddingBottom:20 }}>
+                  {/* Hook */}
+                  <div style={{ borderLeft:`2px solid ${topicColor}`, paddingLeft:16, boxShadow:`-4px 0 12px ${topicGlow}` }}>
+                    <div style={{ fontFamily:"Cormorant Garamond", fontSize:20, fontStyle:"italic", color:C.text, lineHeight:1.5 }}>{lesson.hook}</div>
+                  </div>
+
+                  {/* Body */}
+                  <div style={{ color:C.textSub, fontSize:14, lineHeight:1.8, fontWeight:300 }}>{lesson.body}</div>
+
+                  {/* Insight */}
+                  <div className="card-deep" style={{ padding:16 }}>
+                    <div style={{ fontSize:9, color:topicColor, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:8 }}>{lesson.insightLabel}</div>
+                    <div style={{ color:C.text, fontSize:14, lineHeight:1.65, fontWeight:300 }}>{lesson.insight}</div>
+                  </div>
+
+                  {/* Apply */}
+                  <div style={{ background:`linear-gradient(135deg, rgba(127,174,132,.1) 0%, rgba(255,245,235,.03) 100%)`, border:`1px solid rgba(127,174,132,.2)`, borderRadius:14, padding:16, boxShadow:"inset 0 1px 0 rgba(255,255,255,.04)" }}>
+                    <div style={{ fontSize:9, color:C.green, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:8 }}>Try it</div>
+                    <div style={{ color:C.textSub, fontSize:14, lineHeight:1.65, fontWeight:300 }}>{lesson.apply}</div>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ marginTop:20, flexShrink:0, position:"relative", zIndex:1 }}>
+              {/* Pinned button */}
+              <div style={{ flexShrink:0, padding:"12px 26px 28px", position:"relative", zIndex:1, background:`linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
                 <button className="btn-main" onClick={() => setScreen("quiz")}>Quick reflection →</button>
               </div>
             </Screen>
