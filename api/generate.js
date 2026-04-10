@@ -1,23 +1,19 @@
 // api/generate.js — Vercel Serverless Function
-// This runs server-side so your API key stays secret.
+// Proxies Anthropic API calls. Suggested reading comes from the model's knowledge.
 
 export default async function handler(req, res) {
-  // Only allow POST
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // CORS headers (adjust origin for production)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
   const apiKey = process.env.ANTHROPIC_API_KEY;
-
   if (!apiKey) {
     return res.status(500).json({ error: "ANTHROPIC_API_KEY is not configured" });
   }
@@ -44,9 +40,24 @@ Respond ONLY with a JSON object — no preamble, no markdown fences, just raw JS
     "question": "a multiple-choice question testing the core idea",
     "options": ["option A", "option B", "option C", "option D"],
     "answerIndex": 0
-  }
+  },
+  "furtherReading": [
+    {
+      "type": "book or article or paper or talk",
+      "title": "exact title of the work",
+      "author": "author name"
+    }
+  ]
 }
-Make it genuinely interesting — surprising facts, counterintuitive truths, or practical wisdom. Avoid platitudes.`;
+
+IMPORTANT rules for furtherReading:
+- Include 2-3 items that are real, well-known, and directly relevant to the lesson topic.
+- Only suggest works you are highly confident actually exist — real books with real authors, real published articles, real TED talks, real research papers.
+- Do NOT invent or fabricate titles. If unsure a work exists, leave it out.
+- Mix types when possible (e.g. one book and one talk, or one article and one paper).
+- Use the full, accurate title and correct author name.
+
+Make the lesson genuinely interesting — surprising facts, counterintuitive truths, or practical wisdom. Avoid platitudes.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -57,7 +68,7 @@ Make it genuinely interesting — surprising facts, counterintuitive truths, or 
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
+        max_tokens: 1200,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -72,7 +83,6 @@ Make it genuinely interesting — surprising facts, counterintuitive truths, or 
     const data = await response.json();
     const text = (data.content || []).map((b) => b.text || "").join("");
 
-    // Return the raw text — the frontend will parse it
     return res.status(200).json({ text });
   } catch (err) {
     console.error("Generate lesson error:", err);

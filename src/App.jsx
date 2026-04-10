@@ -407,16 +407,11 @@ export default function App() {
 
           {/* ── LESSON ── */}
           {screen === "lesson" && lesson && (
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", flexDirection: "column",
-              animation: "fadeUp 0.45s cubic-bezier(.22,.68,0,1.2) forwards",
-              overflow: "hidden",
-            }}>
-              <div style={{ flex: 1, overflowY: "auto", padding: "20px 26px 20px", position: "relative" }}>
+            <Screen style={{ padding:"0", position:"relative", display:"flex", flexDirection:"column" }}>
+              <div style={{ flex:1, overflowY:"auto", padding:"20px 26px 0", position:"relative" }}>
                 <GlowOrb top={-50} left={160} color={topicGlow} size={200} />
 
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, position:"relative", zIndex:1 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexShrink:0, position:"relative", zIndex:1 }}>
                   <button onClick={() => setScreen("time")} style={{ background:"none", border:"none", color:C.textMuted, fontSize:13, cursor:"pointer", padding:0 }}>← Exit</button>
                   <div style={{ fontSize:11, color:C.textMuted, letterSpacing:.8 }}>{selectedTime?.label} read</div>
                 </div>
@@ -438,7 +433,7 @@ export default function App() {
 
                 <div style={{ height:1, background:`linear-gradient(90deg, ${topicColor}44, transparent)`, marginBottom:18, position:"relative", zIndex:1 }} />
 
-                <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1 }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:14, position:"relative", zIndex:1, paddingBottom:20 }}>
                   {/* Hook */}
                   <div style={{ borderLeft:`2px solid ${topicColor}`, paddingLeft:16, boxShadow:`-4px 0 12px ${topicGlow}` }}>
                     <div style={{ fontFamily:"Cormorant Garamond", fontSize:20, fontStyle:"italic", color:C.text, lineHeight:1.5 }}>{lesson.hook}</div>
@@ -458,14 +453,54 @@ export default function App() {
                     <div style={{ fontSize:9, color:C.green, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:8 }}>Try it</div>
                     <div style={{ color:C.textSub, fontSize:14, lineHeight:1.65, fontWeight:300 }}>{lesson.apply}</div>
                   </div>
+
+                  {/* Further Reading */}
+                  {Array.isArray(lesson.furtherReading) && lesson.furtherReading.length > 0 && (
+                    <div style={{ marginTop:4 }}>
+                      <div style={{ fontSize:9, color:C.textMuted, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5, marginBottom:10 }}>Go deeper</div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                        {lesson.furtherReading.map((item, i) => {
+                          const typeIcons = { book: "📖", article: "📄", paper: "📑", talk: "🎤" };
+                          const icon = typeIcons[item.type?.toLowerCase()] || "📌";
+                          const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(item.title + " " + item.author)}`;
+                          return (
+                            <a
+                              key={i}
+                              href={searchUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display:"flex", alignItems:"flex-start", gap:10,
+                                padding:"10px 12px",
+                                background: C.surface1,
+                                border:`1px solid ${C.border}`,
+                                borderRadius:10,
+                                textDecoration:"none",
+                                transition:"background .2s, border-color .2s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = C.surface2; e.currentTarget.style.borderColor = C.borderHover; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = C.surface1; e.currentTarget.style.borderColor = C.border; }}
+                            >
+                              <span style={{ fontSize:14, flexShrink:0, marginTop:1 }}>{icon}</span>
+                              <div style={{ minWidth:0, flex:1 }}>
+                                <div style={{ fontSize:12, color:C.text, fontWeight:400, lineHeight:1.4 }}>{item.title}</div>
+                                <div style={{ fontSize:10, color:C.textMuted, marginTop:3 }}>{item.author}{item.type ? ` · ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}` : ""}</div>
+                              </div>
+                              <span style={{ fontSize:10, color:C.textMuted, flexShrink:0, marginLeft:"auto", marginTop:2 }}>Search ↗</span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Pinned button — always visible at bottom */}
-              <div style={{ flexShrink: 0, padding: "12px 26px 28px", position: "relative", zIndex: 1, background: `linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
+              {/* Pinned button */}
+              <div style={{ flexShrink:0, padding:"12px 26px 28px", position:"relative", zIndex:1, background:`linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
                 <button className="btn-main" onClick={() => setScreen("quiz")}>Quick reflection →</button>
               </div>
-            </div>
+            </Screen>
           )}
 
           {/* ── QUIZ ── */}
