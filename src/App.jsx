@@ -352,7 +352,11 @@ export default function App() {
 
                 <div className="card-deep" style={{ padding:"20px 20px 18px", marginBottom:20 }}>
                   <div style={{ fontFamily:"Cormorant Garamond", fontSize:22, color:C.text, lineHeight:1.5, fontStyle:"italic", marginBottom:10 }}>
-                    Welcome back, {user.name?.split(" ")[0] || "explorer"}.
+                    {user.guest
+                      ? "Your next lesson awaits."
+                      : (user.lessonCount || 0) > 0
+                        ? `Welcome back, ${user.name?.split(" ")[0] || "explorer"}.`
+                        : `Welcome, ${user.name?.split(" ")[0] || "explorer"}.`}
                   </div>
                   <div style={{ width:32, height:1, background:`linear-gradient(90deg, ${C.accent}, transparent)`, marginBottom:10 }} />
                   <div style={{ color:C.textSub, fontSize:13, lineHeight:1.7, fontWeight:300 }}>
