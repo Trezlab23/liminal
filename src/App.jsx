@@ -194,6 +194,10 @@ export default function App() {
     setLesson(null); setError(null); setQuizAnswer(null);
   };
 
+  const handleGuestLogin = () => {
+    setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 });
+  };
+
   const topicObj = lesson ? TOPICS.find(t => t.id === lesson._topicId) : null;
   const topicColor = topicObj?.color || "#D4875A";
   const topicGlow = topicObj?.glow || "rgba(212,135,90,.2)";
@@ -221,6 +225,7 @@ export default function App() {
   const finishAndHome = async () => {
     const xpEarned = quizAnswer === lesson?.quiz?.answerIndex ? 20 : 5;
     if (user?.googleId) {
+      // Signed-in user — save to database
       try {
         const res = await fetch("/api/user", {
           method: "POST",
@@ -234,6 +239,14 @@ export default function App() {
           localStorage.setItem("liminal_user", JSON.stringify(updated));
         }
       } catch (err) { console.error("Failed to save progress:", err); }
+    } else if (user?.guest) {
+      // Guest — update stats in memory only
+      setUser(prev => ({
+        ...prev,
+        xp: (prev.xp || 0) + xpEarned,
+        lessonCount: (prev.lessonCount || 0) + 1,
+        streak: (prev.streak || 0) + 1,
+      }));
     }
     setSelectedTopics([]); setSelectedTime(null);
     setLesson(null); setError(null); setScreen("home");
@@ -297,6 +310,15 @@ export default function App() {
                 <div style={{ display:"flex", justifyContent:"center" }}>
                   <div id="google-signin-btn" style={{ minHeight:44 }} />
                 </div>
+                <button onClick={handleGuestLogin} style={{
+                  background:"none", border:"none", cursor:"pointer",
+                  color:C.textMuted, fontSize:13, fontFamily:"'DM Sans', sans-serif",
+                  marginTop:18, padding:"8px 0", letterSpacing:.3,
+                  transition:"color .2s",
+                }} onMouseEnter={e => e.currentTarget.style.color = C.textSub}
+                   onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>
+                  Continue as guest →
+                </button>
               </div>
             </Screen>
           )}
@@ -318,10 +340,12 @@ export default function App() {
                     <div style={{ fontFamily:"Cormorant Garamond", fontWeight:300, fontSize:36, color:C.text, letterSpacing:2, lineHeight:1 }}>Liminal</div>
                     <div style={{ fontSize:11, color:C.textMuted, marginTop:5, letterSpacing:1.5, textTransform:"uppercase" }}>Learning in the in-between</div>
                   </div>
-                  <button onClick={handleLogout} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
-                    {user.picture
-                      ? <img src={user.picture} alt="" style={{ width:28, height:28, borderRadius:"50%", border:`1.5px solid ${C.border}` }} referrerPolicy="no-referrer" />
-                      : <div style={{ width:28, height:28, borderRadius:"50%", background:C.surface2, border:`1.5px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:C.textMuted }}>{user.name?.[0] || "?"}</div>
+                  <button onClick={user.guest ? handleLogout : handleLogout} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
+                    {user.guest
+                      ? <span style={{ fontSize:11, color:C.accent, fontFamily:"'DM Sans', sans-serif", letterSpacing:.3 }}>Sign in</span>
+                      : user.picture
+                        ? <img src={user.picture} alt="" style={{ width:28, height:28, borderRadius:"50%", border:`1.5px solid ${C.border}` }} referrerPolicy="no-referrer" />
+                        : <div style={{ width:28, height:28, borderRadius:"50%", background:C.surface2, border:`1.5px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:C.textMuted }}>{user.name?.[0] || "?"}</div>
                     }
                   </button>
                 </div>
