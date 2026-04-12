@@ -211,7 +211,7 @@ export default function App() {
   const topicObj = lesson ? TOPICS.find(t => t.id === lesson._topicId) : null;
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
-  const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t => t !== id) : [...p, id]);
+  const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? [] : [id]);
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
@@ -381,7 +381,7 @@ export default function App() {
               <GlowOrb top={220} left={220} color="rgba(160,100,255,0.08)" size={160} />
               <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 18, padding: 0, position: "relative", zIndex: 1 }}>← Back</button>
               <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200, position: "relative", zIndex: 1 }}>What draws you?</div>
-              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 18, position: "relative", zIndex: 1 }}>Select one or more to explore</div>
+              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 18, position: "relative", zIndex: 1 }}>Choose a topic for this session</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, flex: 1, position: "relative", zIndex: 1 }}>
                 {TOPICS.map(t => { const sel = selectedTopics.includes(t.id); return (
                   <button key={t.id} onClick={() => toggleTopic(t.id)} style={{ background: sel ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.02) 100%)` : C.surface, border: `0.5px solid ${sel ? t.color+"44" : C.border}`, borderRadius: 16, padding: "14px 12px", cursor: "pointer", transition: "all .25s", textAlign: "left", boxShadow: sel ? `0 4px 20px ${t.glow}` : "none" }}>
@@ -509,7 +509,7 @@ export default function App() {
           {user && screen === "progress" && (
             <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
               <GlowOrb top={-40} left={100} color="rgba(160,100,255,0.1)" size={200} />
-              <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ position: "relative", zIndex: 1, paddingBottom: 20 }}>
                 <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200 }}>Your progress</div>
                 <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 20 }}>{totalLessonsAllTopics} lesson{totalLessonsAllTopics !== 1 ? "s" : ""} completed across {topicProgress.length} topic{topicProgress.length !== 1 ? "s" : ""}</div>
 
