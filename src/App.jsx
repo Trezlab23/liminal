@@ -125,6 +125,36 @@ function getLevel(lessonCount) {
   return { name: current.name, progress, next: next?.name, lessonsToNext: next ? next.threshold - lessonCount : 0 };
 }
 
+/* Achievement Badges */
+const ACHIEVEMENTS = [
+  { id: "first_light", icon: "🌱", name: "First Light", desc: "Complete your first lesson", check: (u, tp) => (u.lessonCount || 0) >= 1 },
+  { id: "on_fire", icon: "🔥", name: "On Fire", desc: "Reach a 7-day streak", check: (u) => (u.streak || 0) >= 7 },
+  { id: "unstoppable", icon: "⚡", name: "Unstoppable", desc: "Reach a 14-day streak", check: (u) => (u.streak || 0) >= 14 },
+  { id: "legendary", icon: "💫", name: "Legendary", desc: "Reach a 30-day streak", check: (u) => (u.streak || 0) >= 30 },
+  { id: "explorer", icon: "🧭", name: "Explorer", desc: "Try all 6 topics", check: (u, tp) => tp.length >= 6 },
+  { id: "scholar", icon: "📚", name: "Scholar", desc: "Complete 10 lessons", check: (u) => (u.lessonCount || 0) >= 10 },
+  { id: "sharpshooter", icon: "🎯", name: "Sharpshooter", desc: "Reach 80% quiz accuracy", check: (u, tp) => { const total = tp.reduce((s,p) => s+p.lessonCount,0); const correct = tp.reduce((s,p) => s+p.correctCount,0); return total >= 5 && (correct/total) >= 0.8; } },
+  { id: "century", icon: "🏆", name: "Century", desc: "Earn 100 XP", check: (u) => (u.xp || 0) >= 100 },
+  { id: "diamond", icon: "💎", name: "Diamond Mind", desc: "Earn 500 XP", check: (u) => (u.xp || 0) >= 500 },
+  { id: "cosmic", icon: "🌌", name: "Cosmic Learner", desc: "Complete 50 lessons", check: (u) => (u.lessonCount || 0) >= 50 },
+];
+
+const STREAK_MILESTONES = [
+  { days: 7, bonus: 50, label: "1 Week" },
+  { days: 14, bonus: 100, label: "2 Weeks" },
+  { days: 30, bonus: 200, label: "1 Month" },
+  { days: 60, bonus: 500, label: "2 Months" },
+  { days: 100, bonus: 1000, label: "100 Days" },
+];
+
+function getUnlockedBadges(user, topicProgress) {
+  return ACHIEVEMENTS.filter(a => a.check(user, topicProgress));
+}
+
+function getNextMilestone(streak) {
+  return STREAK_MILESTONES.find(m => streak < m.days) || null;
+}
+
 const C = {
   bg: "#0D0B14", surface: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.06)",
   text: "rgba(255,255,255,0.9)", textSub: "rgba(255,255,255,0.45)", textMuted: "rgba(255,255,255,0.2)",
@@ -303,6 +333,43 @@ export default function App() {
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.accent, boxShadow: `0 0 8px ${C.accentGlow}` }} />
                   <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Every lesson composed fresh by AI</div>
                 </div>
+
+                {/* Achievements preview */}
+                {(() => {
+                  const unlocked = getUnlockedBadges(user, topicProgress);
+                  const nextMilestone = getNextMilestone(user.streak || 0);
+                  return (unlocked.length > 0 || nextMilestone) ? (
+                    <div style={{ marginTop: 10 }}>
+                      {unlocked.length > 0 && (
+                        <div style={{ padding: "10px 14px", background: C.surface, borderRadius: 10, border: `0.5px solid ${C.border}`, marginBottom: nextMilestone ? 8 : 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span style={{ fontSize: 8, color: C.textMuted, textTransform: "uppercase", letterSpacing: 1.2, fontWeight: 600 }}>Achievements</span>
+                            <span style={{ fontSize: 9, color: C.accent }}>{unlocked.length}/{ACHIEVEMENTS.length}</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                            {unlocked.slice(0, 6).map(a => (
+                              <span key={a.id} title={a.name} style={{ fontSize: 16, filter: "none" }}>{a.icon}</span>
+                            ))}
+                            {unlocked.length > 6 && <span style={{ fontSize: 11, color: C.textMuted, alignSelf: "center" }}>+{unlocked.length - 6}</span>}
+                            {ACHIEVEMENTS.length - unlocked.length > 0 && (
+                              <span style={{ fontSize: 11, color: C.textMuted, alignSelf: "center", marginLeft: 4 }}>· {ACHIEVEMENTS.length - unlocked.length} locked</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {nextMilestone && (
+                        <div style={{ padding: "10px 14px", background: "rgba(255,60,120,0.04)", borderRadius: 10, border: "0.5px solid rgba(255,60,120,0.1)" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>
+                              <span style={{ color: C.pink, fontWeight: 500 }}>{nextMilestone.label}</span> streak milestone in {nextMilestone.days - (user.streak||0)} day{nextMilestone.days - (user.streak||0) !== 1 ? "s" : ""}
+                            </div>
+                            <span style={{ fontSize: 10, color: C.pink, fontWeight: 500 }}>+{nextMilestone.bonus} XP</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
               </div>
               <div style={{ marginTop: 18, position: "relative", zIndex: 1 }}><button className="btn-primary" onClick={() => { setShowAccountMenu(false); setScreen("topics"); }}>Begin a session →</button></div>
             </Screen>
@@ -489,6 +556,46 @@ export default function App() {
                     <button className="btn-primary" onClick={() => setScreen("topics")}>Start learning →</button>
                   </div>
                 )}
+
+                {/* Streak Milestones */}
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 9, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Streak milestones</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {STREAK_MILESTONES.map(m => {
+                      const reached = (user.streak || 0) >= m.days;
+                      return (
+                        <div key={m.days} style={{ padding: "8px 12px", background: reached ? "rgba(255,60,120,0.08)" : C.surface, border: `0.5px solid ${reached ? "rgba(255,60,120,0.2)" : C.border}`, borderRadius: 10, textAlign: "center", minWidth: 70 }}>
+                          <div style={{ fontSize: 12, color: reached ? C.pink : C.textMuted, fontWeight: reached ? 500 : 300 }}>{m.label}</div>
+                          <div style={{ fontSize: 9, color: reached ? "rgba(255,60,120,0.6)" : C.textMuted, marginTop: 2 }}>+{m.bonus} XP</div>
+                          {reached && <div style={{ fontSize: 8, color: C.green, marginTop: 2 }}>✓</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Achievement Badges */}
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ fontSize: 9, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5 }}>Achievements</span>
+                    <span style={{ fontSize: 10, color: C.accent }}>{getUnlockedBadges(user, topicProgress).length}/{ACHIEVEMENTS.length}</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {ACHIEVEMENTS.map(a => {
+                      const unlocked = a.check(user, topicProgress);
+                      return (
+                        <div key={a.id} style={{ padding: "12px", background: unlocked ? "linear-gradient(135deg, rgba(160,100,255,0.08) 0%, rgba(255,60,120,0.04) 100%)" : C.surface, border: `0.5px solid ${unlocked ? "rgba(160,100,255,0.2)" : C.border}`, borderRadius: 14, transition: "all .3s" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                            <span style={{ fontSize: 18, filter: unlocked ? "none" : "grayscale(1) opacity(0.3)" }}>{a.icon}</span>
+                            <span style={{ fontSize: 11, color: unlocked ? "#fff" : C.textMuted, fontWeight: unlocked ? 500 : 300 }}>{a.name}</span>
+                          </div>
+                          <div style={{ fontSize: 9, color: unlocked ? C.textSub : C.textMuted, lineHeight: 1.4 }}>{a.desc}</div>
+                          {unlocked && <div style={{ fontSize: 8, color: C.green, marginTop: 4, fontWeight: 500 }}>Unlocked</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </Screen>
           )}
