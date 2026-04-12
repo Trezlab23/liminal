@@ -51,6 +51,22 @@ const NavHome = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24"
 const NavTopics = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>);
 const NavTime = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
 
+const MindPlanetIcon = ({ size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
+    <defs><linearGradient id="mpg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#a064ff"/><stop offset="100%" stopColor="#ff3c78"/></linearGradient></defs>
+    <circle cx="40" cy="40" r="18" fill="none" stroke="url(#mpg)" strokeWidth="1.2"/>
+    <path d="M33 37 C33 33, 35 31, 38 31 C39 30, 40 30, 41 31 C42 30, 43 30, 44 31 C47 31, 49 33, 49 37 C50 39, 49 41, 47 42 C48 44, 47 47, 45 48 C43 49, 41 49, 40 48 C39 49, 37 49, 35 48 C33 47, 32 44, 33 42 C31 41, 30 39, 33 37Z" fill="none" stroke="#a064ff" strokeWidth="0.9" opacity="0.75"/>
+    <line x1="40" y1="31" x2="40" y2="48" stroke="#a064ff" strokeWidth="0.5" opacity="0.35"/>
+    <path d="M34 40 Q40 38 46 40" fill="none" stroke="#a064ff" strokeWidth="0.5" opacity="0.3"/>
+    <ellipse cx="40" cy="40" rx="30" ry="11" fill="none" stroke="#ff3c78" strokeWidth="0.7" opacity="0.25" transform="rotate(-20 40 40)"/>
+    <circle cx="63" cy="28" r="2.5" fill="#ff3c78" opacity="0.8"/>
+    <circle cx="16" cy="50" r="2" fill="#a064ff" opacity="0.5"/>
+    <circle cx="54" cy="18" r="1" fill="#64b4ff" opacity="0.4"/>
+    <circle cx="26" cy="60" r="1.2" fill="#c084fc" opacity="0.35"/>
+    <circle cx="12" cy="36" r="0.8" fill="#ff3c78" opacity="0.3"/>
+  </svg>
+);
+
 function Screen({ children, style }) {
   return (<div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s cubic-bezier(.22,.68,0,1.1) forwards", overflowY: "auto", ...style }}>{children}</div>);
 }
@@ -136,7 +152,7 @@ export default function App() {
               <GlowOrb top={-60} left={60} color="rgba(160,100,255,0.15)" size={280} />
               <GlowOrb top={350} left={180} color="rgba(255,60,120,0.08)" size={200} />
               <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
-                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)", fontSize: 32, color: C.accent }}>◈</div>
+                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
                 <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 34, color: "#fff", letterSpacing: 6, textTransform: "uppercase", marginBottom: 6 }}>Liminal</div>
                 <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>Micro-learning · AI-powered</div>
                 <Glass style={{ padding: "22px 20px", marginBottom: 28 }}>
@@ -243,7 +259,7 @@ export default function App() {
               <GlowOrb top={80} left={60} color="rgba(160,100,255,0.1)" size={220} />
               <GlowOrb top={320} left={180} color="rgba(255,60,120,0.06)" size={160} />
               <div style={{ position: "relative", zIndex: 1, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-                <div style={{ fontSize: 48, animation: "breathe 2.8s ease-in-out infinite", color: C.accent }}>◈</div>
+                <div style={{ animation: "breathe 2.8s ease-in-out infinite" }}><MindPlanetIcon size={52} /></div>
                 <div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${C.accent}`, animation: "spin .9s linear infinite" }} />
                 <div><div style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#fff", marginBottom: 6, fontWeight: 200 }}>Composing your lesson…</div><div style={{ color: C.textMuted, fontSize: 12 }}>Something worth your in-between time</div></div>
               </div>
@@ -318,7 +334,7 @@ export default function App() {
               <GlowOrb top={50} left={60} color="rgba(160,100,255,0.1)" size={220} />
               <GlowOrb top={400} left={180} color="rgba(255,60,120,0.06)" size={160} />
               <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
-                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)", fontSize: 32, color: C.accent }}>◈</div>
+                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
                 <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 200, fontSize: 26, color: "#fff", marginBottom: 6 }}>Session complete.</div>
                 <div style={{ color: C.textMuted, marginBottom: 26, fontStyle: "italic", fontFamily: "'Sora',sans-serif", fontSize: 14, fontWeight: 200 }}>Another moment well spent.</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 22 }}>
