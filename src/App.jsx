@@ -98,6 +98,33 @@ function useGoogleAuth() {
   return { loaded, renderButton };
 }
 
+/* Milestone Levels */
+const LEVELS = [
+  { name: "Newcomer", threshold: 0 },
+  { name: "Beginner", threshold: 3 },
+  { name: "Curious", threshold: 8 },
+  { name: "Intermediate", threshold: 15 },
+  { name: "Skilled", threshold: 25 },
+  { name: "Advanced", threshold: 40 },
+  { name: "Expert", threshold: 60 },
+  { name: "Master", threshold: 100 },
+];
+
+function getLevel(lessonCount) {
+  let current = LEVELS[0], next = LEVELS[1];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (lessonCount >= LEVELS[i].threshold) {
+      current = LEVELS[i];
+      next = LEVELS[i + 1] || null;
+      break;
+    }
+  }
+  const progress = next
+    ? Math.round(((lessonCount - current.threshold) / (next.threshold - current.threshold)) * 100)
+    : 100;
+  return { name: current.name, progress, next: next?.name, lessonsToNext: next ? next.threshold - lessonCount : 0 };
+}
+
 const C = {
   bg: "#0D0B14", surface: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.06)",
   text: "rgba(255,255,255,0.9)", textSub: "rgba(255,255,255,0.45)", textMuted: "rgba(255,255,255,0.2)",
@@ -125,6 +152,7 @@ export default function App() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [lessonHistory, setLessonHistory] = useState([]);
   const [topicProgress, setTopicProgress] = useState([]);
+  const [viewingLesson, setViewingLesson] = useState(null);
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
   useEffect(() => { const saved = localStorage.getItem("liminal_user"); if (saved) { try { const p = JSON.parse(saved); setUser(p); fetch(`/api/user?googleId=${p.googleId}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.user) { const u = { ...p, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } }).catch(() => {}); } catch {} } setAuthLoading(false); }, []);
@@ -425,26 +453,31 @@ export default function App() {
                     const correct = prog?.correctCount || 0;
                     const xp = prog?.totalXp || 0;
                     const accuracy = count > 0 ? Math.round((correct / count) * 100) : 0;
-                    const percent = Math.min(count * 10, 100); // 10 lessons = 100%
+                    const level = getLevel(count);
                     return (
                       <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: count > 0 ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.01) 100%)` : C.surface, border: `0.5px solid ${count > 0 ? t.color + "33" : C.border}`, borderRadius: 16, transition: "all .3s" }}>
                         <div style={{ position: "relative", flexShrink: 0 }}>
-                          <ProgressRing percent={percent} color={t.color} size={48} strokeWidth={3} />
+                          <ProgressRing percent={level.progress} color={t.color} size={48} strokeWidth={3} />
                           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{t.icon}</div>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, color: "#fff", fontWeight: 400, marginBottom: 3 }}>{t.label}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                            <span style={{ fontSize: 13, color: "#fff", fontWeight: 400 }}>{t.label}</span>
+                            {count > 0 && <span style={{ fontSize: 8, color: t.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, background: t.glow, padding: "2px 6px", borderRadius: 3 }}>{level.name}</span>}
+                          </div>
                           {count > 0 ? (
-                            <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textSub }}>
-                              <span>{count} lesson{count !== 1 ? "s" : ""}</span>
-                              <span>{xp} XP</span>
-                              <span>{accuracy}% accuracy</span>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                              <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textSub }}>
+                                <span>{count} lesson{count !== 1 ? "s" : ""}</span>
+                                <span>{xp} XP</span>
+                                <span>{accuracy}%</span>
+                              </div>
+                              {level.next && <div style={{ fontSize: 9, color: C.textMuted }}>{level.lessonsToNext} more to {level.next}</div>}
                             </div>
                           ) : (
                             <div style={{ fontSize: 10, color: C.textMuted }}>Not started yet</div>
                           )}
                         </div>
-                        {count > 0 && <div style={{ fontSize: 11, color: t.color, fontWeight: 500, flexShrink: 0 }}>{percent}%</div>}
                       </div>
                     );
                   })}
@@ -461,7 +494,7 @@ export default function App() {
           )}
 
           {/* HISTORY */}
-          {user && screen === "history" && (
+          {user && screen === "history" && !viewingLesson && (
             <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
               <GlowOrb top={-30} left={200} color="rgba(100,180,255,0.08)" size={160} />
               <div style={{ position: "relative", zIndex: 1 }}>
@@ -473,7 +506,9 @@ export default function App() {
                     {lessonHistory.map((l) => {
                       const t = TOPICS.find(tp => tp.id === l.topicId);
                       return (
-                        <div key={l.id} style={{ padding: "14px 16px", background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 14, transition: "all .2s" }}>
+                        <button key={l.id} onClick={() => setViewingLesson(l)} style={{ padding: "14px 16px", background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 14, transition: "all .2s", cursor: "pointer", textAlign: "left", width: "100%", fontFamily: "'Outfit',sans-serif" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = C.surface; e.currentTarget.style.borderColor = C.border; }}>
                           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
@@ -483,6 +518,7 @@ export default function App() {
                               <div style={{ fontSize: 13, color: "#fff", fontWeight: 400, lineHeight: 1.4, marginBottom: 4 }}>{l.title}</div>
                               <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.5, fontWeight: 300, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{l.hook}</div>
                             </div>
+                            <span style={{ fontSize: 11, color: C.textMuted, flexShrink: 0, marginTop: 4 }}>→</span>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, paddingTop: 8, borderTop: `0.5px solid ${C.border}` }}>
                             <div style={{ display: "flex", gap: 10, fontSize: 10, color: C.textMuted }}>
@@ -492,7 +528,7 @@ export default function App() {
                             </div>
                             <div style={{ fontSize: 10, color: C.textMuted }}>{timeAgo(l.createdAt)}</div>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -505,6 +541,54 @@ export default function App() {
               </div>
             </Screen>
           )}
+
+          {/* HISTORY DETAIL — read-only lesson view */}
+          {user && screen === "history" && viewingLesson && (() => {
+            const vt = TOPICS.find(tp => tp.id === viewingLesson.topicId);
+            const vc = vt?.color || C.accent;
+            const vg = vt?.glow || C.accentGlow;
+            return (
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s cubic-bezier(.22,.68,0,1.1) forwards", overflow: "hidden" }}>
+                <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 20px", position: "relative" }}>
+                  <GlowOrb top={-40} left={160} color={vg} size={180} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, position: "relative", zIndex: 1 }}>
+                    <button onClick={() => setViewingLesson(null)} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: 0 }}>← Back to history</button>
+                    <div style={{ fontSize: 10, color: C.textMuted }}>{viewingLesson.duration} min read</div>
+                  </div>
+                  <div style={{ marginBottom: 14, position: "relative", zIndex: 1 }}>
+                    <span style={{ display: "inline-block", fontSize: 8, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase", color: vc, border: `0.5px solid ${vc}44`, borderRadius: 4, padding: "3px 8px", background: vg }}>{viewingLesson.badge}</span>
+                    <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 22, color: "#fff", lineHeight: 1.3, marginTop: 10 }}>{viewingLesson.title}</div>
+                    <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>{vt?.icon} {vt?.label} · {new Date(viewingLesson.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                  </div>
+                  <div style={{ height: 1, background: `linear-gradient(90deg, ${vc}33, transparent)`, marginBottom: 16, position: "relative", zIndex: 1 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 1 }}>
+                    <div style={{ borderLeft: `1.5px solid ${vc}`, paddingLeft: 14, boxShadow: `-3px 0 12px ${vg}` }}><div style={{ fontFamily: "'Sora',sans-serif", fontSize: 16, fontStyle: "italic", color: C.text, lineHeight: 1.6, fontWeight: 200 }}>{viewingLesson.hook}</div></div>
+                    {viewingLesson.body && <div style={{ color: C.textSub, fontSize: 13, lineHeight: 1.8, fontWeight: 300 }}>{viewingLesson.body}</div>}
+                    {viewingLesson.insight && (
+                      <Glass style={{ padding: 16 }}>
+                        <div style={{ fontSize: 8, color: vc, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>{viewingLesson.insightLabel || "Key insight"}</div>
+                        <div style={{ color: C.text, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{viewingLesson.insight}</div>
+                      </Glass>
+                    )}
+                    {viewingLesson.apply && (
+                      <div style={{ background: "rgba(100,180,255,0.04)", border: "0.5px solid rgba(100,180,255,0.1)", borderRadius: 16, padding: 16 }}>
+                        <div style={{ fontSize: 8, color: C.blue, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>Try it</div>
+                        <div style={{ color: C.textSub, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{viewingLesson.apply}</div>
+                      </div>
+                    )}
+                    {/* Quiz result */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: C.surface, borderRadius: 10, border: `0.5px solid ${C.border}` }}>
+                      <span style={{ color: viewingLesson.quizCorrect ? C.green : C.red, fontSize: 13 }}>{viewingLesson.quizCorrect ? "✓" : "✗"}</span>
+                      <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>{viewingLesson.quizCorrect ? "Quiz answered correctly" : "Quiz missed"} · +{viewingLesson.xpEarned} XP</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ flexShrink: 0, padding: "12px 24px 26px", position: "relative", zIndex: 1, background: `linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
+                  <button className="btn-secondary" onClick={() => setViewingLesson(null)}>← Back to history</button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* NAV — 4 tabs */}
@@ -516,7 +600,7 @@ export default function App() {
               { label: "History", s: "history", Icon: NavHistory },
               { label: "Learn", s: "topics", Icon: NavLearn },
             ].map(n => (
-              <button key={n.label} onClick={() => { setShowAccountMenu(false); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
+              <button key={n.label} onClick={() => { setShowAccountMenu(false); setViewingLesson(null); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
                 <n.Icon active={screen === n.s || (n.s === "topics" && screen === "time")} />
                 <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
