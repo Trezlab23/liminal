@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const TOPICS = [
   { id: "career", icon: "💼", label: "Career & Work", color: "#D4875A", glow: "rgba(212,135,90,.25)" },
@@ -141,6 +141,7 @@ export default function App() {
   const [lesson, setLesson] = useState(null);
   const [error, setError] = useState(null);
   const [quizAnswer, setQuizAnswer] = useState(null);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
@@ -188,10 +189,25 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setShowAccountMenu(false);
     localStorage.removeItem("liminal_user");
     setScreen("home");
     setSelectedTopics([]); setSelectedTime(null);
     setLesson(null); setError(null); setQuizAnswer(null);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.googleId) { handleLogout(); return; }
+    const confirmed = window.confirm("This will permanently delete your account and all your progress. Are you sure?");
+    if (!confirmed) return;
+    try {
+      await fetch("/api/auth/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ googleId: user.googleId }),
+      });
+    } catch (err) { console.error("Delete failed:", err); }
+    handleLogout();
   };
 
   const handleGuestLogin = () => {
@@ -340,14 +356,44 @@ export default function App() {
                     <div style={{ fontFamily:"Cormorant Garamond", fontWeight:300, fontSize:36, color:C.text, letterSpacing:2, lineHeight:1 }}>Liminal</div>
                     <div style={{ fontSize:11, color:C.textMuted, marginTop:5, letterSpacing:1.5, textTransform:"uppercase" }}>Learning in the in-between</div>
                   </div>
-                  <button onClick={user.guest ? handleLogout : handleLogout} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
-                    {user.guest
-                      ? <span style={{ fontSize:11, color:C.accent, fontFamily:"'DM Sans', sans-serif", letterSpacing:.3 }}>Sign in</span>
-                      : user.picture
-                        ? <img src={user.picture} alt="" style={{ width:28, height:28, borderRadius:"50%", border:`1.5px solid ${C.border}` }} referrerPolicy="no-referrer" />
-                        : <div style={{ width:28, height:28, borderRadius:"50%", background:C.surface2, border:`1.5px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:C.textMuted }}>{user.name?.[0] || "?"}</div>
-                    }
-                  </button>
+                  <div style={{ position:"relative" }}>
+                    <button onClick={() => user.guest ? handleLogout() : setShowAccountMenu(p => !p)} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
+                      {user.guest
+                        ? <span style={{ fontSize:11, color:C.accent, fontFamily:"'DM Sans', sans-serif", letterSpacing:.3 }}>Sign in</span>
+                        : user.picture
+                          ? <img src={user.picture} alt="" style={{ width:28, height:28, borderRadius:"50%", border:`1.5px solid ${showAccountMenu ? C.accent : C.border}`, transition:"border-color .2s" }} referrerPolicy="no-referrer" />
+                          : <div style={{ width:28, height:28, borderRadius:"50%", background:C.surface2, border:`1.5px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:C.textMuted }}>{user.name?.[0] || "?"}</div>
+                      }
+                    </button>
+                    {showAccountMenu && !user.guest && (
+                      <div style={{
+                        position:"absolute", top:36, right:0, width:180, zIndex:20,
+                        background:"#2A2018", border:`1px solid ${C.border}`, borderRadius:12,
+                        boxShadow:"0 8px 32px rgba(0,0,0,.5)", overflow:"hidden",
+                      }}>
+                        <div style={{ padding:"12px 14px 8px", borderBottom:`1px solid ${C.border}` }}>
+                          <div style={{ fontSize:12, color:C.text, fontWeight:500 }}>{user.name}</div>
+                          <div style={{ fontSize:10, color:C.textMuted, marginTop:2 }}>{user.email}</div>
+                        </div>
+                        <button onClick={handleLogout} style={{
+                          display:"block", width:"100%", padding:"10px 14px", background:"none", border:"none",
+                          color:C.textSub, fontSize:12, fontFamily:"'DM Sans', sans-serif", textAlign:"left",
+                          cursor:"pointer", transition:"background .15s",
+                        }} onMouseEnter={e => e.currentTarget.style.background = C.surface1}
+                           onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                          Sign out
+                        </button>
+                        <button onClick={handleDeleteAccount} style={{
+                          display:"block", width:"100%", padding:"10px 14px", background:"none", border:"none",
+                          color:C.red, fontSize:12, fontFamily:"'DM Sans', sans-serif", textAlign:"left",
+                          cursor:"pointer", transition:"background .15s",
+                        }} onMouseEnter={e => e.currentTarget.style.background = "rgba(196,142,155,.08)"}
+                           onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                          Delete account
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="card-deep" style={{ padding:"20px 20px 18px", marginBottom:20 }}>
@@ -383,7 +429,7 @@ export default function App() {
                 </div>
               </div>
               <div style={{ marginTop:20, position:"relative", zIndex:1 }}>
-                <button className="btn-main" onClick={() => setScreen("topics")}>Begin a session →</button>
+                <button className="btn-main" onClick={() => { setShowAccountMenu(false); setScreen("topics"); }}>Begin a session →</button>
               </div>
             </Screen>
           )}
