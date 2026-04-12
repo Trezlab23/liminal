@@ -51,7 +51,7 @@ async function generateLesson(topicId, duration) {
 const NavHome = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
 const NavProgress = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>);
 const NavHistory = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M4.93 4.93l2.83 2.83" opacity="0.4"/></svg>);
-const NavLearn = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>);
+const NavLearn = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9"/></svg>);
 
 const MindPlanetIcon = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
