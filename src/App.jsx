@@ -47,9 +47,11 @@ async function generateLesson(topicId, duration) {
   return parsed;
 }
 
+/* Nav Icons */
 const NavHome = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
-const NavTopics = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>);
-const NavTime = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+const NavProgress = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>);
+const NavHistory = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M4.93 4.93l2.83 2.83" opacity="0.4"/></svg>);
+const NavLearn = ({ active }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#a064ff" : "rgba(255,255,255,0.2)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>);
 
 const MindPlanetIcon = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
@@ -59,11 +61,8 @@ const MindPlanetIcon = ({ size = 36 }) => (
     <line x1="40" y1="31" x2="40" y2="48" stroke="#a064ff" strokeWidth="0.5" opacity="0.35"/>
     <path d="M34 40 Q40 38 46 40" fill="none" stroke="#a064ff" strokeWidth="0.5" opacity="0.3"/>
     <ellipse cx="40" cy="40" rx="30" ry="11" fill="none" stroke="#ff3c78" strokeWidth="0.7" opacity="0.25" transform="rotate(-20 40 40)"/>
-    <circle cx="63" cy="28" r="2.5" fill="#ff3c78" opacity="0.8"/>
-    <circle cx="16" cy="50" r="2" fill="#a064ff" opacity="0.5"/>
-    <circle cx="54" cy="18" r="1" fill="#64b4ff" opacity="0.4"/>
-    <circle cx="26" cy="60" r="1.2" fill="#c084fc" opacity="0.35"/>
-    <circle cx="12" cy="36" r="0.8" fill="#ff3c78" opacity="0.3"/>
+    <circle cx="63" cy="28" r="2.5" fill="#ff3c78" opacity="0.8"/><circle cx="16" cy="50" r="2" fill="#a064ff" opacity="0.5"/>
+    <circle cx="54" cy="18" r="1" fill="#64b4ff" opacity="0.4"/><circle cx="26" cy="60" r="1.2" fill="#c084fc" opacity="0.35"/>
   </svg>
 );
 
@@ -77,6 +76,19 @@ function GlowOrb({ top, left, color, size = 180 }) {
 
 function Glass({ children, style }) {
   return (<div style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", ...style }}>{children}</div>);
+}
+
+/* Progress Ring */
+function ProgressRing({ percent, color, size = 52, strokeWidth = 3 }) {
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (percent / 100) * circ;
+  return (
+    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeWidth} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={strokeWidth} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
+    </svg>
+  );
 }
 
 function useGoogleAuth() {
@@ -94,6 +106,13 @@ const C = {
   gradient: "linear-gradient(135deg, #a064ff 0%, #ff3c78 100%)",
 };
 
+function timeAgo(date) {
+  const now = new Date(); const d = new Date(date); const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return "just now"; if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`; if (diff < 604800) return `${Math.floor(diff/86400)}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -104,13 +123,30 @@ export default function App() {
   const [error, setError] = useState(null);
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [lessonHistory, setLessonHistory] = useState([]);
+  const [topicProgress, setTopicProgress] = useState([]);
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
   useEffect(() => { const saved = localStorage.getItem("liminal_user"); if (saved) { try { const p = JSON.parse(saved); setUser(p); fetch(`/api/user?googleId=${p.googleId}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.user) { const u = { ...p, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } }).catch(() => {}); } catch {} } setAuthLoading(false); }, []);
   useEffect(() => { if (!user && googleLoaded && !authLoading) renderButton("google-signin-btn", handleGoogleLogin); }, [user, googleLoaded, authLoading, renderButton]);
 
+  // Fetch lesson data when user logs in or navigates to history/progress
+  const fetchLessonData = useCallback(async () => {
+    if (!user?.googleId) return;
+    try {
+      const res = await fetch(`/api/lessons?googleId=${user.googleId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLessonHistory(data.lessons || []);
+        setTopicProgress(data.progress || []);
+      }
+    } catch {}
+  }, [user?.googleId]);
+
+  useEffect(() => { if (user?.googleId) fetchLessonData(); }, [user?.googleId, fetchLessonData]);
+
   const handleGoogleLogin = async (credential) => { try { const res = await fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) }); if (!res.ok) throw new Error(); const data = await res.json(); setUser(data.user); localStorage.setItem("liminal_user", JSON.stringify(data.user)); } catch (err) { console.error("Login error:", err); } };
-  const handleLogout = () => { setUser(null); setShowAccountMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); };
+  const handleLogout = () => { setUser(null); setShowAccountMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); };
   const handleDeleteAccount = async () => { if (!user?.googleId) { handleLogout(); return; } if (!window.confirm("This will permanently delete your account and all your progress. Are you sure?")) return; try { await fetch("/api/auth/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId }) }); } catch {} handleLogout(); };
   const handleGuestLogin = () => { setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 }); };
 
@@ -118,9 +154,41 @@ export default function App() {
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t => t !== id) : [...p, id]);
+
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
-  const finishAndHome = async () => { const xpEarned = quizAnswer === lesson?.quiz?.answerIndex ? 20 : 5; if (user?.googleId) { try { const res = await fetch("/api/user", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId, xpEarned }) }); if (res.ok) { const d = await res.json(); const u = { ...user, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } } catch {} } else if (user?.guest) { setUser(prev => ({ ...prev, xp: (prev.xp||0)+xpEarned, lessonCount: (prev.lessonCount||0)+1, streak: (prev.streak||0)+1 })); } setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setScreen("home"); };
+
+  const finishAndHome = async () => {
+    const xpEarned = quizAnswer === lesson?.quiz?.answerIndex ? 20 : 5;
+    const quizCorrect = quizAnswer === lesson?.quiz?.answerIndex;
+    if (user?.googleId) {
+      try {
+        // Save user stats
+        const res = await fetch("/api/user", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId, xpEarned }) });
+        if (res.ok) { const d = await res.json(); const u = { ...user, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); }
+        // Save lesson to history
+        await fetch("/api/lessons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+          googleId: user.googleId,
+          lesson: { topicId: lesson._topicId, title: lesson.title, hook: lesson.hook, body: lesson.body, insightLabel: lesson.insightLabel, insight: lesson.insight, apply: lesson.apply, badge: lesson.badge, quizQuestion: lesson.quiz?.question },
+          quizCorrect, xpEarned, duration: selectedTime?.value || 0,
+        })});
+        // Refresh lesson data
+        fetchLessonData();
+      } catch {}
+    } else if (user?.guest) {
+      setUser(prev => ({ ...prev, xp: (prev.xp||0)+xpEarned, lessonCount: (prev.lessonCount||0)+1, streak: (prev.streak||0)+1 }));
+      // Save to local guest history
+      setLessonHistory(prev => [{ id: Date.now(), topicId: lesson._topicId, title: lesson.title, hook: lesson.hook, badge: lesson.badge, quizCorrect, xpEarned, duration: selectedTime?.value, createdAt: new Date().toISOString() }, ...prev]);
+      setTopicProgress(prev => {
+        const existing = prev.find(p => p.topicId === lesson._topicId);
+        if (existing) return prev.map(p => p.topicId === lesson._topicId ? { ...p, lessonCount: p.lessonCount + 1, totalXp: p.totalXp + xpEarned, correctCount: p.correctCount + (quizCorrect ? 1 : 0) } : p);
+        return [...prev, { topicId: lesson._topicId, lessonCount: 1, totalXp: xpEarned, correctCount: quizCorrect ? 1 : 0 }];
+      });
+    }
+    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setScreen("home");
+  };
+
+  const totalLessonsAllTopics = topicProgress.reduce((s, p) => s + p.lessonCount, 0);
 
   return (
     <div style={{ fontFamily: "'Outfit', sans-serif", background: "#08060E", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
@@ -140,10 +208,6 @@ export default function App() {
       `}</style>
 
       <div style={{ width: 375, height: 780, background: C.bg, borderRadius: 44, overflow: "hidden", position: "relative", boxShadow: "0 48px 100px rgba(0,0,0,.8), 0 0 0 0.5px rgba(160,100,255,0.1)", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 28px 0", color: C.textMuted, fontSize: 11, flexShrink: 0, fontWeight: 400, position: "relative", zIndex: 11 }}>
-          <span>9:41</span><span style={{ letterSpacing: 2 }}>···</span>
-        </div>
-
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
 
           {/* LOGIN */}
@@ -345,15 +409,116 @@ export default function App() {
               </div>
             </Screen>
           )}
+
+          {/* PROGRESS */}
+          {user && screen === "progress" && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-40} left={100} color="rgba(160,100,255,0.1)" size={200} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200 }}>Your progress</div>
+                <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 20 }}>{totalLessonsAllTopics} lesson{totalLessonsAllTopics !== 1 ? "s" : ""} completed across {topicProgress.length} topic{topicProgress.length !== 1 ? "s" : ""}</div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {TOPICS.map(t => {
+                    const prog = topicProgress.find(p => p.topicId === t.id);
+                    const count = prog?.lessonCount || 0;
+                    const correct = prog?.correctCount || 0;
+                    const xp = prog?.totalXp || 0;
+                    const accuracy = count > 0 ? Math.round((correct / count) * 100) : 0;
+                    const percent = Math.min(count * 10, 100); // 10 lessons = 100%
+                    return (
+                      <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: count > 0 ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.01) 100%)` : C.surface, border: `0.5px solid ${count > 0 ? t.color + "33" : C.border}`, borderRadius: 16, transition: "all .3s" }}>
+                        <div style={{ position: "relative", flexShrink: 0 }}>
+                          <ProgressRing percent={percent} color={t.color} size={48} strokeWidth={3} />
+                          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{t.icon}</div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: "#fff", fontWeight: 400, marginBottom: 3 }}>{t.label}</div>
+                          {count > 0 ? (
+                            <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textSub }}>
+                              <span>{count} lesson{count !== 1 ? "s" : ""}</span>
+                              <span>{xp} XP</span>
+                              <span>{accuracy}% accuracy</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 10, color: C.textMuted }}>Not started yet</div>
+                          )}
+                        </div>
+                        {count > 0 && <div style={{ fontSize: 11, color: t.color, fontWeight: 500, flexShrink: 0 }}>{percent}%</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {totalLessonsAllTopics === 0 && (
+                  <div style={{ textAlign: "center", marginTop: 32 }}>
+                    <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 16, color: C.textSub, fontWeight: 200, marginBottom: 14 }}>Complete your first lesson to see progress here.</div>
+                    <button className="btn-primary" onClick={() => setScreen("topics")}>Start learning →</button>
+                  </div>
+                )}
+              </div>
+            </Screen>
+          )}
+
+          {/* HISTORY */}
+          {user && screen === "history" && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-30} left={200} color="rgba(100,180,255,0.08)" size={160} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200 }}>Lesson history</div>
+                <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 20 }}>{lessonHistory.length} lesson{lessonHistory.length !== 1 ? "s" : ""} completed</div>
+
+                {lessonHistory.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {lessonHistory.map((l) => {
+                      const t = TOPICS.find(tp => tp.id === l.topicId);
+                      return (
+                        <div key={l.id} style={{ padding: "14px 16px", background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 14, transition: "all .2s" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                                <span style={{ fontSize: 14 }}>{t?.icon || "📚"}</span>
+                                <span style={{ fontSize: 8, color: t?.color || C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, background: (t?.glow || "rgba(160,100,255,0.1)"), padding: "2px 6px", borderRadius: 3 }}>{l.badge}</span>
+                              </div>
+                              <div style={{ fontSize: 13, color: "#fff", fontWeight: 400, lineHeight: 1.4, marginBottom: 4 }}>{l.title}</div>
+                              <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.5, fontWeight: 300, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{l.hook}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, paddingTop: 8, borderTop: `0.5px solid ${C.border}` }}>
+                            <div style={{ display: "flex", gap: 10, fontSize: 10, color: C.textMuted }}>
+                              <span>{l.duration} min</span>
+                              <span style={{ color: l.quizCorrect ? C.green : C.textMuted }}>{l.quizCorrect ? "✓ Correct" : "✗ Missed"}</span>
+                              <span>+{l.xpEarned} XP</span>
+                            </div>
+                            <div style={{ fontSize: 10, color: C.textMuted }}>{timeAgo(l.createdAt)}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", marginTop: 32 }}>
+                    <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 16, color: C.textSub, fontWeight: 200, marginBottom: 14 }}>No lessons yet. Start your first one!</div>
+                    <button className="btn-primary" onClick={() => setScreen("topics")}>Start learning →</button>
+                  </div>
+                )}
+              </div>
+            </Screen>
+          )}
         </div>
 
-        {/* NAV */}
-        {user && ["home","topics","time"].includes(screen) && (
+        {/* NAV — 4 tabs */}
+        {user && ["home","progress","history","topics","time"].includes(screen) && (
           <div style={{ display: "flex", justifyContent: "space-around", padding: "8px 0 22px", borderTop: `0.5px solid ${C.border}`, flexShrink: 0, background: `linear-gradient(0deg, ${C.bg} 80%, transparent)`, position: "relative", zIndex: 11 }}>
-            {[{ label: "Home", s: "home", Icon: NavHome }, { label: "Topics", s: "topics", Icon: NavTopics }, { label: "Time", s: "time", Icon: NavTime }].map(n => (
-              <button key={n.label} onClick={() => { setShowAccountMenu(false); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 16px" }}>
-                <n.Icon active={screen === n.s} />
-                <span style={{ fontSize: 8, color: screen === n.s ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
+            {[
+              { label: "Home", s: "home", Icon: NavHome },
+              { label: "Progress", s: "progress", Icon: NavProgress },
+              { label: "History", s: "history", Icon: NavHistory },
+              { label: "Learn", s: "topics", Icon: NavLearn },
+            ].map(n => (
+              <button key={n.label} onClick={() => { setShowAccountMenu(false); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
+                <n.Icon active={screen === n.s || (n.s === "topics" && screen === "time")} />
+                <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
             ))}
           </div>
