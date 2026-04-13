@@ -36,10 +36,12 @@ function extractJSON(text) {
   return null;
 }
 
-async function generateLesson(topicId, duration) {
+async function generateLesson(topicId, duration, googleId) {
   const topicObj = TOPICS.find(t => t.id === topicId) || TOPICS[0];
   const depth = duration <= 2 ? "one sharp idea only" : duration <= 10 ? "2-3 focused ideas" : "a deeper dive with context";
-  const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topicLabel: topicObj.label, duration, depth }) });
+  const body = { topicLabel: topicObj.label, duration, depth };
+  if (googleId) body.googleId = googleId;
+  const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.error || `API error ${res.status}`); }
   const data = await res.json();
   const parsed = extractJSON(data.text);
@@ -218,7 +220,7 @@ export default function App() {
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? [] : [id]);
 
-  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
+  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
   const finishAndHome = async () => {
@@ -685,6 +687,75 @@ export default function App() {
                     })}
                   </div>
                 </div>
+
+                {/* Learning Profile */}
+                {totalLessonsAllTopics >= 1 && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 9, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Your learning profile</div>
+                    <Glass style={{ padding: 16 }}>
+                      {(() => {
+                        const totalCorrect = topicProgress.reduce((s, p) => s + p.correctCount, 0);
+                        const overallAccuracy = totalLessonsAllTopics > 0 ? Math.round((totalCorrect / totalLessonsAllTopics) * 100) : 0;
+                        const favTopic = topicProgress.length > 0 ? topicProgress.reduce((a, b) => a.lessonCount > b.lessonCount ? a : b) : null;
+                        const favTopicObj = favTopic ? TOPICS.find(t => t.id === favTopic.topicId) : null;
+                        const strongTopic = topicProgress.filter(p => p.lessonCount >= 2).length > 0
+                          ? topicProgress.filter(p => p.lessonCount >= 2).reduce((a, b) => (a.correctCount / a.lessonCount) > (b.correctCount / b.lessonCount) ? a : b)
+                          : null;
+                        const strongTopicObj = strongTopic ? TOPICS.find(t => t.id === strongTopic.topicId) : null;
+                        const diffLevel = overallAccuracy >= 80 ? "Advanced" : overallAccuracy >= 50 ? "Intermediate" : "Foundations";
+                        const diffColor = overallAccuracy >= 80 ? C.accent : overallAccuracy >= 50 ? C.blue : C.green;
+                        const diffDesc = overallAccuracy >= 80 ? "Lessons are tuned to challenge you with nuance and depth." : overallAccuracy >= 50 ? "Lessons balance clarity with complexity." : "Lessons focus on clear explanations and building confidence.";
+
+                        return (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Difficulty level</div>
+                              <div style={{ fontSize: 12, color: diffColor, fontWeight: 500 }}>{diffLevel}</div>
+                            </div>
+                            <div style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.5, marginTop: -6 }}>{diffDesc}</div>
+                            <div style={{ height: 0.5, background: C.border }} />
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Overall accuracy</div>
+                              <div style={{ fontSize: 12, color: overallAccuracy >= 70 ? C.green : C.textSub, fontWeight: 500 }}>{overallAccuracy}%</div>
+                            </div>
+                            {favTopicObj && (
+                              <>
+                                <div style={{ height: 0.5, background: C.border }} />
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                  <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Most explored</div>
+                                  <div style={{ fontSize: 12, color: favTopicObj.color, fontWeight: 500 }}>{favTopicObj.icon} {favTopicObj.label}</div>
+                                </div>
+                              </>
+                            )}
+                            {strongTopicObj && strongTopicObj.id !== favTopicObj?.id && (
+                              <>
+                                <div style={{ height: 0.5, background: C.border }} />
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                  <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Strongest topic</div>
+                                  <div style={{ fontSize: 12, color: strongTopicObj.color, fontWeight: 500 }}>{strongTopicObj.icon} {strongTopicObj.label}</div>
+                                </div>
+                              </>
+                            )}
+                            <div style={{ height: 0.5, background: C.border }} />
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Topics explored</div>
+                              <div style={{ fontSize: 12, color: C.textSub, fontWeight: 500 }}>{topicProgress.length} of {TOPICS.length}</div>
+                            </div>
+                            <div style={{ marginTop: 4, padding: "8px 12px", background: "rgba(160,100,255,0.04)", borderRadius: 8, border: "0.5px solid rgba(160,100,255,0.1)" }}>
+                              <div style={{ fontSize: 10, color: C.textSub, lineHeight: 1.5 }}>
+                                {overallAccuracy >= 80
+                                  ? "The AI adapts to your level — expect deeper dives, counterintuitive angles, and advanced connections."
+                                  : overallAccuracy >= 50
+                                    ? "The AI is calibrating to your pace — lessons balance accessibility with depth."
+                                    : "The AI is keeping things clear and approachable — as your accuracy grows, lessons will get more challenging."}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </Glass>
+                  </div>
+                )}
               </div>
             </Screen>
           )}
