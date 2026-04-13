@@ -189,7 +189,10 @@ export default function App() {
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
   useEffect(() => { const saved = localStorage.getItem("liminal_user"); if (saved) { try { const p = JSON.parse(saved); setUser(p); fetch(`/api/user?googleId=${p.googleId}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.user) { const u = { ...p, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } }).catch(() => {}); } catch {} } setAuthLoading(false); }, []);
-  useEffect(() => { if (!user && googleLoaded && !authLoading && onboardSlide === 3) renderButton("google-signin-btn", handleGoogleLogin); }, [user, googleLoaded, authLoading, renderButton, onboardSlide]);
+
+  const handleGoogleLogin = useCallback(async (credential) => { try { const res = await fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) }); if (!res.ok) throw new Error(); const data = await res.json(); setUser(data.user); localStorage.setItem("liminal_user", JSON.stringify(data.user)); } catch (err) { console.error("Login error:", err); } }, []);
+
+  useEffect(() => { if (!user && googleLoaded && !authLoading && onboardSlide === 3) { setTimeout(() => renderButton("google-signin-btn", handleGoogleLogin), 150); } }, [user, googleLoaded, authLoading, renderButton, onboardSlide, handleGoogleLogin]);
 
   // Fetch lesson data when user logs in or navigates to history/progress
   const fetchLessonData = useCallback(async () => {
@@ -206,7 +209,6 @@ export default function App() {
 
   useEffect(() => { if (user?.googleId) fetchLessonData(); }, [user?.googleId, fetchLessonData]);
 
-  const handleGoogleLogin = async (credential) => { try { const res = await fetch("/api/auth/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential }) }); if (!res.ok) throw new Error(); const data = await res.json(); setUser(data.user); localStorage.setItem("liminal_user", JSON.stringify(data.user)); } catch (err) { console.error("Login error:", err); } };
   const handleLogout = () => { setUser(null); setShowAccountMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); };
   const handleDeleteAccount = async () => { if (!user?.googleId) { handleLogout(); return; } if (!window.confirm("This will permanently delete your account and all your progress. Are you sure?")) return; try { await fetch("/api/auth/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId }) }); } catch {} handleLogout(); };
   const handleGuestLogin = () => { setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 }); };
