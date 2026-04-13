@@ -274,111 +274,107 @@ export default function App() {
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
 
           {/* ONBOARDING + LOGIN */}
-          {!user && !authLoading && (
-            <Screen style={{ padding: 0, position: "relative" }}>
+          {!user && !authLoading && onboardSlide === 0 && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
               <GlowOrb top={-60} left={60} color="rgba(160,100,255,0.15)" size={280} />
               <GlowOrb top={400} left={180} color="rgba(255,60,120,0.08)" size={200} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
+                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 16 }}>The space between<br/>is yours to fill.</div>
+                <div style={{ fontSize: 12, color: C.textSub, textAlign: "center", lineHeight: 1.6, maxWidth: 270 }}>Liminal turns your idle moments — commutes, queues, waiting rooms — into AI-composed micro-lessons.</div>
+              </div>
+              <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
+                </div>
+                <button className="btn-primary" onClick={() => setOnboardSlide(1)}>Next →</button>
+              </div>
+            </div>
+          )}
 
-              {/* Slide 1: The hook */}
-              {onboardSlide === 0 && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
-                    <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
-                    <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 16 }}>The space between<br/>is yours to fill.</div>
-                    <div style={{ fontSize: 12, color: C.textSub, textAlign: "center", lineHeight: 1.6, maxWidth: 270 }}>Liminal turns your idle moments — commutes, queues, waiting rooms — into AI-composed micro-lessons.</div>
+          {!user && !authLoading && onboardSlide === 1 && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
+              <GlowOrb top={-40} left={100} color="rgba(160,100,255,0.1)" size={200} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 28 }}>Fresh every time.<br/>Never the same lesson twice.</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(160,100,255,0.06)", border: "0.5px solid rgba(160,100,255,0.12)", borderRadius: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(160,100,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.accent, fontWeight: 500, flexShrink: 0 }}>1</div>
+                    <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Pick a topic</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>Psychology, science, finance & more</div></div>
                   </div>
-                  <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                    </div>
-                    <button className="btn-primary" onClick={() => setOnboardSlide(1)}>Next →</button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,60,120,0.04)", border: "0.5px solid rgba(255,60,120,0.1)", borderRadius: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,60,120,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.pink, fontWeight: 500, flexShrink: 0 }}>2</div>
+                    <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Set your time</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>2 minutes or 30 — the lesson adapts</div></div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(100,180,255,0.04)", border: "0.5px solid rgba(100,180,255,0.1)", borderRadius: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(100,180,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.blue, fontWeight: 500, flexShrink: 0 }}>3</div>
+                    <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Learn something new</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>AI composes a unique lesson just for you</div></div>
                   </div>
                 </div>
-              )}
-
-              {/* Slide 2: How it works */}
-              {onboardSlide === 1 && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
-                    <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 28 }}>Fresh every time.<br/>Never the same lesson twice.</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(160,100,255,0.06)", border: "0.5px solid rgba(160,100,255,0.12)", borderRadius: 12 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(160,100,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.accent, fontWeight: 500, flexShrink: 0 }}>1</div>
-                        <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Pick a topic</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>Psychology, science, finance & more</div></div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,60,120,0.04)", border: "0.5px solid rgba(255,60,120,0.1)", borderRadius: 12 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,60,120,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.pink, fontWeight: 500, flexShrink: 0 }}>2</div>
-                        <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Set your time</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>2 minutes or 30 — the lesson adapts</div></div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(100,180,255,0.04)", border: "0.5px solid rgba(100,180,255,0.1)", borderRadius: 12 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(100,180,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.blue, fontWeight: 500, flexShrink: 0 }}>3</div>
-                        <div><div style={{ fontSize: 12, color: "#fff", fontWeight: 400 }}>Learn something new</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>AI composes a unique lesson just for you</div></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                      <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                    </div>
-                    <button className="btn-primary" onClick={() => setOnboardSlide(2)}>Next →</button>
-                    <button onClick={() => setOnboardSlide(0)} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>← Back</button>
-                  </div>
+              </div>
+              <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
+                  <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
                 </div>
-              )}
+                <button className="btn-primary" onClick={() => setOnboardSlide(2)}>Next →</button>
+                <button onClick={() => setOnboardSlide(0)} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>← Back</button>
+              </div>
+            </div>
+          )}
 
-              {/* Slide 3: Gamification + CTA */}
-              {onboardSlide === 2 && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
-                    <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 24 }}>Track your growth.<br/>Build a streak.</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", marginBottom: 20 }}>
-                      {[{ label: "Streak", val: "7", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "XP", val: "340", color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lessons", val: "24", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
-                        <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
-                          <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, color: s.color, fontWeight: 200 }}>{s.val}</div>
-                          <div style={{ fontSize: 7, color: C.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>{s.label}</div>
-                        </div>
-                      ))}
+          {!user && !authLoading && onboardSlide === 2 && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s ease forwards" }}>
+              <GlowOrb top={-40} left={60} color="rgba(160,100,255,0.12)" size={220} />
+              <GlowOrb top={380} left={200} color="rgba(74,222,128,0.05)" size={140} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", position: "relative", zIndex: 1 }}>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 200, color: "#fff", textAlign: "center", lineHeight: 1.4, marginBottom: 24 }}>Track your growth.<br/>Build a streak.</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", marginBottom: 20 }}>
+                  {[{ label: "Streak", val: "7", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "XP", val: "340", color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lessons", val: "24", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
+                    <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
+                      <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, color: s.color, fontWeight: 200 }}>{s.val}</div>
+                      <div style={{ fontSize: 7, color: C.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>{s.label}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 14 }}>
-                      {["🌱","🔥","🧭","📚"].map((e,i) => <span key={i} style={{ fontSize: 18 }}>{e}</span>)}
-                      {["🎯","💫"].map((e,i) => <span key={i} style={{ fontSize: 18, filter: "grayscale(1) opacity(0.3)" }}>{e}</span>)}
-                    </div>
-                    <div style={{ fontSize: 12, color: C.textSub, textAlign: "center", lineHeight: 1.6 }}>Earn XP, unlock achievement badges, and level up across topics.</div>
-                  </div>
-                  <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
-                      <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
-                    </div>
-                    <button className="btn-primary" onClick={() => { localStorage.setItem("liminal_onboarded", "1"); setOnboardSlide(3); }}>Get started →</button>
-                    <button onClick={() => setOnboardSlide(1)} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>← Back</button>
-                  </div>
+                  ))}
                 </div>
-              )}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 14 }}>
+                  {["🌱","🔥","🧭","📚"].map((e,i) => <span key={i} style={{ fontSize: 18 }}>{e}</span>)}
+                  {["🎯","💫"].map((e,i) => <span key={i+4} style={{ fontSize: 18, filter: "grayscale(1) opacity(0.3)" }}>{e}</span>)}
+                </div>
+                <div style={{ fontSize: 12, color: C.textSub, textAlign: "center", lineHeight: 1.6 }}>Earn XP, unlock achievement badges, and level up across topics.</div>
+              </div>
+              <div style={{ padding: "0 28px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
+                  <div style={{ width: 8, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }} />
+                  <div style={{ width: 20, height: 3, borderRadius: 2, background: C.accent }} />
+                </div>
+                <button className="btn-primary" onClick={() => { localStorage.setItem("liminal_onboarded", "1"); setOnboardSlide(3); }}>Get started →</button>
+                <button onClick={() => setOnboardSlide(1)} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>← Back</button>
+              </div>
+            </div>
+          )}
 
-              {/* Slide 3 (sign-in) — shown after onboarding or for returning logged-out users */}
-              {onboardSlide === 3 && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 26px 28px", animation: "fadeUp 0.4s ease forwards" }}>
-                  <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
-                    <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
-                    <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 34, color: "#fff", letterSpacing: 6, textTransform: "uppercase", marginBottom: 6 }}>Liminal</div>
-                    <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>Micro-learning · AI-powered</div>
-                    <Glass style={{ padding: "22px 20px", marginBottom: 28 }}>
-                      <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, color: C.text, lineHeight: 1.6, fontWeight: 200, fontStyle: "italic", marginBottom: 12 }}>Turn idle moments into micro-lessons, freshly composed by AI every time.</div>
-                      <div style={{ width: 30, height: 1, background: C.gradient, margin: "0 auto 12px" }} />
-                      <div style={{ color: C.textSub, fontSize: 12, lineHeight: 1.6, fontWeight: 300 }}>Sign in to track your streak, earn XP, and pick up where you left off.</div>
-                    </Glass>
-                    <div style={{ display: "flex", justifyContent: "center" }}><div id="google-signin-btn" style={{ minHeight: 44 }} /></div>
-                    <button onClick={handleGuestLogin} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", marginTop: 18, padding: "8px 0", transition: "color .2s" }} onMouseEnter={e => e.currentTarget.style.color = C.textSub} onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>Continue as guest →</button>
-                  </div>
-                </div>
-              )}
-            </Screen>
+          {!user && !authLoading && onboardSlide === 3 && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 26px 28px", animation: "fadeUp 0.4s ease forwards" }}>
+              <GlowOrb top={-60} left={60} color="rgba(160,100,255,0.15)" size={280} />
+              <GlowOrb top={350} left={180} color="rgba(255,60,120,0.08)" size={200} />
+              <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
+                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 34, color: "#fff", letterSpacing: 6, textTransform: "uppercase", marginBottom: 6 }}>Liminal</div>
+                <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>Micro-learning · AI-powered</div>
+                <Glass style={{ padding: "22px 20px", marginBottom: 28 }}>
+                  <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, color: C.text, lineHeight: 1.6, fontWeight: 200, fontStyle: "italic", marginBottom: 12 }}>Turn idle moments into micro-lessons, freshly composed by AI every time.</div>
+                  <div style={{ width: 30, height: 1, background: C.gradient, margin: "0 auto 12px" }} />
+                  <div style={{ color: C.textSub, fontSize: 12, lineHeight: 1.6, fontWeight: 300 }}>Sign in to track your streak, earn XP, and pick up where you left off.</div>
+                </Glass>
+                <div style={{ display: "flex", justifyContent: "center" }}><div id="google-signin-btn" style={{ minHeight: 44 }} /></div>
+                <button onClick={handleGuestLogin} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", marginTop: 18, padding: "8px 0", transition: "color .2s" }} onMouseEnter={e => e.currentTarget.style.color = C.textSub} onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>Continue as guest →</button>
+              </div>
+            </div>
           )}
 
           {authLoading && (<Screen style={{ alignItems: "center", justifyContent: "center" }}><div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${C.accent}`, animation: "spin .9s linear infinite" }} /></Screen>)}
