@@ -598,7 +598,8 @@ export default function App() {
 
           {/* PROGRESS */}
           {user && screen === "progress" && (
-            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.4s cubic-bezier(.22,.68,0,1.1) forwards", overflow: "hidden" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 24px", position: "relative" }}>
               <GlowOrb top={-40} left={100} color="rgba(160,100,255,0.1)" size={200} />
               <div style={{ position: "relative", zIndex: 1, paddingBottom: 20 }}>
                 <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200 }}>Your progress</div>
@@ -757,7 +758,8 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </Screen>
+              </div>
+            </div>
           )}
 
           {/* HISTORY */}
