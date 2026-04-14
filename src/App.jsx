@@ -222,7 +222,7 @@ export default function App() {
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => { setShowCustomTopic(false); setCustomTopicText(""); setSelectedTopics(p => p.includes(id) ? [] : [id]); };
-  const selectCustomTopic = (text) => { if (text.trim()) { setSelectedTopics([text.trim()]); setShowCustomTopic(false); } };
+
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
