@@ -37,9 +37,10 @@ function extractJSON(text) {
 }
 
 async function generateLesson(topicId, duration, googleId) {
-  const topicObj = TOPICS.find(t => t.id === topicId) || TOPICS[0];
+  const topicObj = TOPICS.find(t => t.id === topicId);
+  const topicLabel = topicObj ? topicObj.label : topicId; // custom topics use the ID as the label
   const depth = duration <= 2 ? "one sharp idea only" : duration <= 10 ? "2-3 focused ideas" : "a deeper dive with context";
-  const body = { topicLabel: topicObj.label, duration, depth };
+  const body = { topicLabel, duration, depth };
   if (googleId) body.googleId = googleId;
   const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.error || `API error ${res.status}`); }
@@ -188,6 +189,8 @@ export default function App() {
   const [onboardSlide, setOnboardSlide] = useState(() => {
     return localStorage.getItem("liminal_onboarded") ? 3 : 0;
   });
+  const [showCustomTopic, setShowCustomTopic] = useState(false);
+  const [customTopicText, setCustomTopicText] = useState("");
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
   useEffect(() => { const saved = localStorage.getItem("liminal_user"); if (saved) { try { const p = JSON.parse(saved); setUser(p); fetch(`/api/user?googleId=${p.googleId}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.user) { const u = { ...p, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } }).catch(() => {}); } catch {} } setAuthLoading(false); }, []);
@@ -215,10 +218,11 @@ export default function App() {
   const handleDeleteAccount = async () => { if (!user?.googleId) { handleLogout(); return; } if (!window.confirm("This will permanently delete your account and all your progress. Are you sure?")) return; try { await fetch("/api/auth/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId }) }); } catch {} handleLogout(); };
   const handleGuestLogin = () => { setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 }); };
 
-  const topicObj = lesson ? TOPICS.find(t => t.id === lesson._topicId) : null;
+  const topicObj = lesson ? (TOPICS.find(t => t.id === lesson._topicId) || { id: lesson._topicId, icon: "✨", label: lesson._topicId, color: "#c084fc", glow: "rgba(192,132,252,.2)" }) : null;
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
-  const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? [] : [id]);
+  const toggleTopic = (id) => { setShowCustomTopic(false); setCustomTopicText(""); setSelectedTopics(p => p.includes(id) ? [] : [id]); };
+  const selectCustomTopic = (text) => { if (text.trim()) { setSelectedTopics([text.trim()]); setShowCustomTopic(false); } };
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
@@ -250,7 +254,7 @@ export default function App() {
         return [...prev, { topicId: lesson._topicId, lessonCount: 1, totalXp: xpEarned, correctCount: quizCorrect ? 1 : 0 }];
       });
     }
-    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setScreen("home");
+    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setShowCustomTopic(false); setCustomTopicText(""); setScreen("home");
   };
 
   const totalLessonsAllTopics = topicProgress.reduce((s, p) => s + p.lessonCount, 0);
@@ -472,15 +476,58 @@ export default function App() {
               <GlowOrb top={220} left={220} color="rgba(160,100,255,0.08)" size={160} />
               <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 18, padding: 0, position: "relative", zIndex: 1 }}>← Back</button>
               <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200, position: "relative", zIndex: 1 }}>What draws you?</div>
-              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 18, position: "relative", zIndex: 1 }}>Choose a topic for this session</div>
+              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 18, position: "relative", zIndex: 1 }}>Choose a topic or create your own</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, flex: 1, position: "relative", zIndex: 1 }}>
-                {TOPICS.map(t => { const sel = selectedTopics.includes(t.id); return (
+                {TOPICS.map(t => { const sel = selectedTopics.includes(t.id) && !showCustomTopic; return (
                   <button key={t.id} onClick={() => toggleTopic(t.id)} style={{ background: sel ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.02) 100%)` : C.surface, border: `0.5px solid ${sel ? t.color+"44" : C.border}`, borderRadius: 16, padding: "14px 12px", cursor: "pointer", transition: "all .25s", textAlign: "left", boxShadow: sel ? `0 4px 20px ${t.glow}` : "none" }}>
                     <div style={{ fontSize: 20, marginBottom: 8 }}>{t.icon}</div>
                     <div style={{ color: "#fff", fontWeight: 400, fontSize: 12 }}>{t.label}</div>
                     {sel ? <div style={{ marginTop: 6, fontSize: 9, color: t.color, fontWeight: 500 }}>✓ Selected</div> : <div style={{ marginTop: 6, fontSize: 9, color: C.textMuted }}>Tap to add</div>}
                   </button>); })}
+                {/* Custom topic tile */}
+                <button onClick={() => { setShowCustomTopic(true); setSelectedTopics([]); }} style={{
+                  background: showCustomTopic ? "linear-gradient(135deg, rgba(192,132,252,0.15) 0%, rgba(255,255,255,0.02) 100%)" : C.surface,
+                  border: `0.5px solid ${showCustomTopic ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 16, padding: "14px 12px", cursor: "pointer", transition: "all .25s", textAlign: "left",
+                  boxShadow: showCustomTopic ? "0 4px 20px rgba(192,132,252,0.15)" : "none",
+                }}>
+                  <div style={{ fontSize: 20, marginBottom: 8 }}>✨</div>
+                  <div style={{ color: "#fff", fontWeight: 400, fontSize: 12 }}>Your topic</div>
+                  {showCustomTopic ? <div style={{ marginTop: 6, fontSize: 9, color: "#c084fc", fontWeight: 500 }}>✓ Custom</div> : <div style={{ marginTop: 6, fontSize: 9, color: C.textMuted }}>Anything you want</div>}
+                </button>
               </div>
+
+              {/* Custom topic input */}
+              {showCustomTopic && (
+                <div style={{ marginTop: 12, position: "relative", zIndex: 1 }}>
+                  <input
+                    type="text"
+                    value={customTopicText}
+                    onChange={e => { setCustomTopicText(e.target.value); if (e.target.value.trim()) setSelectedTopics([e.target.value.trim()]); else setSelectedTopics([]); }}
+                    placeholder="Type a topic... e.g. quantum computing"
+                    autoFocus
+                    style={{
+                      width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(192,132,252,0.25)", borderRadius: 12,
+                      color: "#fff", fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", transition: "border-color .2s",
+                    }}
+                    onFocus={e => e.target.style.borderColor = "rgba(192,132,252,0.5)"}
+                    onBlur={e => e.target.style.borderColor = "rgba(192,132,252,0.25)"}
+                    onKeyDown={e => { if (e.key === "Enter" && customTopicText.trim()) setScreen("time"); }}
+                  />
+                  {/* Suggestion chips */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+                    {["Stoic Philosophy", "Space Exploration", "Nutrition Science", "Blockchain", "Urban Design", "Music Theory"].map(s => (
+                      <button key={s} onClick={() => { setCustomTopicText(s); setSelectedTopics([s]); }} style={{
+                        padding: "6px 12px", background: customTopicText === s ? "rgba(192,132,252,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `0.5px solid ${customTopicText === s ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 20,
+                        color: customTopicText === s ? "#c084fc" : C.textSub, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all .2s",
+                      }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div style={{ marginTop: 16, position: "relative", zIndex: 1 }}><button className="btn-primary" disabled={selectedTopics.length === 0} onClick={() => setScreen("time")}>Choose your window →</button></div>
             </Screen>
           )}
