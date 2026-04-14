@@ -236,6 +236,30 @@ export default function App() {
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
+  const shareContent = async (text, title) => {
+    const shareData = { text, title: title || "Liminal", url: "https://liminal-coral.vercel.app" };
+    try {
+      if (navigator.share) { await navigator.share(shareData); }
+      else { await navigator.clipboard.writeText(text + "\n\nliminal-coral.vercel.app"); alert("Copied to clipboard!"); }
+    } catch (e) { if (e.name !== "AbortError") { try { await navigator.clipboard.writeText(text + "\n\nliminal-coral.vercel.app"); alert("Copied to clipboard!"); } catch {} } }
+  };
+
+  const shareLesson = () => {
+    if (!lesson) return;
+    const text = `Just learned: "${lesson.title}" on Liminal\n\n${lesson.hook}\n\nTurn your idle moments into knowledge.`;
+    shareContent(text, lesson.title);
+  };
+
+  const shareStats = () => {
+    const text = `${user.streak || 0}-day streak on Liminal\n${user.xp || 0} XP · ${user.lessonCount || 0} lessons\n\nTurn your in-between moments into knowledge.`;
+    shareContent(text, "My Liminal Progress");
+  };
+
+  const shareInsight = (insightText) => {
+    const text = `"${insightText}"\n\n— Learned this on Liminal`;
+    shareContent(text, "Liminal Insight");
+  };
+
   const stopAudio = () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setAudioState("idle");
@@ -486,6 +510,16 @@ export default function App() {
                   <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Every lesson composed fresh by AI</div>
                 </div>
 
+                {/* Share progress */}
+                {(user.lessonCount || 0) >= 1 && (
+                  <button onClick={shareStats} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", background: C.surface, borderRadius: 10, border: `0.5px solid ${C.border}`, width: "100%", cursor: "pointer", marginTop: 8, fontFamily: "'Outfit',sans-serif", transition: "all .2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(160,100,255,0.15)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = C.surface; e.currentTarget.style.borderColor = C.border; }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    <div style={{ fontSize: 11, color: C.textSub, fontWeight: 300 }}>Share your progress</div>
+                  </button>
+                )}
+
                 {/* Achievements preview */}
                 {(() => {
                   const unlocked = getUnlockedBadges(user, topicProgress);
@@ -655,7 +689,18 @@ export default function App() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 1 }}>
                   <div style={{ borderLeft: `1.5px solid ${topicColor}`, paddingLeft: 14, boxShadow: `-3px 0 12px ${topicGlow}` }}><div style={{ fontFamily: "'Sora',sans-serif", fontSize: 16, fontStyle: "italic", color: C.text, lineHeight: 1.6, fontWeight: 200 }}>{lesson.hook}</div></div>
                   <div style={{ color: C.textSub, fontSize: 13, lineHeight: 1.8, fontWeight: 300 }}>{lesson.body}</div>
-                  <Glass style={{ padding: 16 }}><div style={{ fontSize: 8, color: topicColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>{lesson.insightLabel}</div><div style={{ color: C.text, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{lesson.insight}</div></Glass>
+                  <Glass style={{ padding: 16 }}>
+                    <div style={{ fontSize: 8, color: topicColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>{lesson.insightLabel}</div>
+                    <div style={{ color: C.text, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{lesson.insight}</div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                      <button onClick={() => shareInsight(lesson.insight)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: `${topicGlow}`, borderRadius: 20, border: "none", cursor: "pointer", transition: "all .2s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = `${topicColor}22`}
+                        onMouseLeave={e => e.currentTarget.style.background = topicGlow}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={topicColor} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <span style={{ fontSize: 9, color: topicColor, fontFamily: "'Outfit',sans-serif" }}>Share</span>
+                      </button>
+                    </div>
+                  </Glass>
                   <div style={{ background: "rgba(100,180,255,0.04)", border: "0.5px solid rgba(100,180,255,0.1)", borderRadius: 16, padding: 16 }}><div style={{ fontSize: 8, color: C.blue, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>Try it</div><div style={{ color: C.textSub, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{lesson.apply}</div></div>
                   {Array.isArray(lesson.furtherReading) && lesson.furtherReading.length > 0 && (
                     <div style={{ marginTop: 2 }}>
@@ -730,7 +775,17 @@ export default function App() {
                   {[{ label: "XP earned", val: quizAnswer === lesson?.quiz?.answerIndex ? "+20" : "+5", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "Streak", val: `${(user.streak||0)+1} days`, color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lesson", val: "Complete", color: C.green, bg: "rgba(74,222,128,0.05)", bc: "rgba(74,222,128,0.1)" }, { label: "Time", val: selectedTime?.label||"—", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
                     <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 18, color: s.color }}>{s.val}</div><div style={{ fontSize: 8, color: C.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: 1.2 }}>{s.label}</div></div>))}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><button className="btn-primary" onClick={startLesson}>Another lesson ✦</button><button className="btn-secondary" onClick={finishAndHome}>Return home</button></div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn-primary" onClick={startLesson} style={{ flex: 1 }}>Another lesson ✦</button>
+                    <button onClick={shareLesson} style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", flexShrink: 0 }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(160,100,255,0.08)"; e.currentTarget.style.borderColor = "rgba(160,100,255,0.2)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = C.border; }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </button>
+                  </div>
+                  <button className="btn-secondary" onClick={finishAndHome}>Return home</button>
+                </div>
               </div>
             </Screen>
           )}
@@ -986,6 +1041,12 @@ export default function App() {
                       <Glass style={{ padding: 16 }}>
                         <div style={{ fontSize: 8, color: vc, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>{viewingLesson.insightLabel || "Key insight"}</div>
                         <div style={{ color: C.text, fontSize: 13, lineHeight: 1.65, fontWeight: 300 }}>{viewingLesson.insight}</div>
+                        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                          <button onClick={() => shareInsight(viewingLesson.insight)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: vg, borderRadius: 20, border: "none", cursor: "pointer", transition: "all .2s" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={vc} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                            <span style={{ fontSize: 9, color: vc, fontFamily: "'Outfit',sans-serif" }}>Share</span>
+                          </button>
+                        </div>
                       </Glass>
                     )}
                     {viewingLesson.apply && (
