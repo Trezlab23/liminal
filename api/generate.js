@@ -108,15 +108,35 @@ export default async function handler(req, res) {
     }
 
     // ── Scale content length ──
-    let bodyLength, insightLength, hookLength, applyLength, readingCount;
+    let bodyLength, insightLength, hookLength, applyLength, readingCount, wordTarget;
     if (duration <= 2) {
-      bodyLength = "2-3 sentences"; insightLength = "1 sentence"; hookLength = "one punchy sentence"; applyLength = "one brief sentence"; readingCount = "1-2";
+      bodyLength = "2-3 short sentences ONLY (40-60 words max)";
+      insightLength = "1 sentence (15-20 words)";
+      hookLength = "one punchy sentence";
+      applyLength = "one brief sentence";
+      readingCount = "1-2";
+      wordTarget = "TOTAL lesson text must be under 150 words. This is a QUICK HIT — ultra concise.";
     } else if (duration <= 10) {
-      bodyLength = "4-6 sentences forming a couple of short paragraphs"; insightLength = "2-3 sentences"; hookLength = "one punchy sentence that sets up the core idea"; applyLength = "2-3 sentences with a specific, actionable step"; readingCount = "2-3";
+      bodyLength = "2-3 short paragraphs (100-150 words)";
+      insightLength = "2-3 sentences (40-60 words)";
+      hookLength = "one punchy sentence that sets up the core idea";
+      applyLength = "2-3 sentences with a specific, actionable step";
+      readingCount = "2-3";
+      wordTarget = "TOTAL lesson text should be 250-350 words. A satisfying short read.";
     } else if (duration <= 20) {
-      bodyLength = "3-4 substantial paragraphs (8-12 sentences total) with examples and context"; insightLength = "4-6 sentences exploring the nuance in depth"; hookLength = "1-2 sentences that create genuine curiosity"; applyLength = "3-4 sentences with a detailed, step-by-step action"; readingCount = "3";
+      bodyLength = "3-4 substantial paragraphs (300-400 words) with examples and context";
+      insightLength = "4-6 sentences (80-120 words) exploring the nuance in depth";
+      hookLength = "1-2 sentences that create genuine curiosity";
+      applyLength = "3-4 sentences with a detailed, step-by-step action";
+      readingCount = "3";
+      wordTarget = "TOTAL lesson text should be 500-700 words. A proper article with depth.";
     } else {
-      bodyLength = "4-6 substantial paragraphs (12-18 sentences total) with multiple examples, historical context, and real-world applications"; insightLength = "6-8 sentences providing a thorough deep-dive into the surprising angle, with supporting evidence"; hookLength = "1-2 compelling sentences"; applyLength = "4-5 sentences with a detailed exercise or multi-step action plan"; readingCount = "3";
+      bodyLength = "4-6 substantial paragraphs (500-700 words) with multiple examples, historical context, and real-world applications";
+      insightLength = "6-8 sentences (150-200 words) providing a thorough deep-dive with supporting evidence";
+      hookLength = "1-2 compelling sentences";
+      applyLength = "4-5 sentences with a detailed exercise or multi-step action plan";
+      readingCount = "3";
+      wordTarget = "TOTAL lesson text should be 800-1100 words. A mini-essay with real substance.";
     }
 
     const prompt = `You are a micro-learning content creator. Create an engaging, surprising lesson on ${topicLabel}. The reader has ${duration} minutes, so calibrate the LENGTH accordingly — this is a ${depth}.
@@ -144,7 +164,7 @@ Respond ONLY with a JSON object — no preamble, no markdown fences, just raw JS
   ]
 }
 
-CRITICAL LENGTH RULE: The reader has ${duration} MINUTES. ${duration <= 2 ? "Keep it very concise — a quick hit of insight." : duration <= 10 ? "Write enough for a satisfying short read — not a quick blurb." : duration <= 20 ? "This should feel like a proper article with depth, examples, and nuance. Do NOT write a short blurb." : "This should feel like a mini-essay — thorough, rich with examples, historical context, and multiple angles. The reader has a full 30 minutes, so give them real substance."}
+CRITICAL LENGTH RULE: The reader has ${duration} MINUTES. ${wordTarget} ${duration <= 2 ? "Keep it very concise — a quick hit of insight. Do NOT write more than 150 words total." : duration <= 10 ? "Write enough for a satisfying short read — not a quick blurb, but not an essay either." : duration <= 20 ? "This should feel like a proper article with depth, examples, and nuance. Do NOT write a short blurb — the reader wants substance." : "This should feel like a mini-essay — thorough, rich with examples, historical context, and multiple angles. The reader has a full 30 minutes, so give them REAL substance. Write LONG."}
 
 IMPORTANT rules for furtherReading:
 - Include ${readingCount} items that are real, well-known, and directly relevant.
