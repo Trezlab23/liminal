@@ -191,6 +191,8 @@ export default function App() {
   });
   const [showCustomTopic, setShowCustomTopic] = useState(false);
   const [customTopicText, setCustomTopicText] = useState("");
+  const [audioState, setAudioState] = useState("idle"); // idle, loading, playing, paused
+  const [audioRef] = useState({ current: null });
   const { loaded: googleLoaded, renderButton } = useGoogleAuth();
 
   useEffect(() => { const saved = localStorage.getItem("liminal_user"); if (saved) { try { const p = JSON.parse(saved); setUser(p); fetch(`/api/user?googleId=${p.googleId}`).then(r => r.ok ? r.json() : null).then(d => { if (d?.user) { const u = { ...p, ...d.user }; setUser(u); localStorage.setItem("liminal_user", JSON.stringify(u)); } }).catch(() => {}); } catch {} } setAuthLoading(false); }, []);
@@ -222,12 +224,59 @@ export default function App() {
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => { setShowCustomTopic(false); setCustomTopicText(""); setSelectedTopics(p => p.includes(id) ? [] : [id]); };
-  
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
+  const stopAudio = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setAudioState("idle");
+  };
+
+  const playLesson = async () => {
+    if (audioState === "playing") { audioRef.current?.pause(); setAudioState("paused"); return; }
+    if (audioState === "paused" && audioRef.current) { audioRef.current.play(); setAudioState("playing"); return; }
+
+    if (!lesson) return;
+    setAudioState("loading");
+
+    // Build the narration text from the lesson
+    const narrationParts = [
+      lesson.title + ".",
+      lesson.hook,
+      lesson.body,
+      lesson.insightLabel + ". " + lesson.insight,
+      "Try this. " + lesson.apply,
+    ];
+    const fullText = narrationParts.filter(Boolean).join("\n\n");
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: fullText }),
+      });
+
+      if (!res.ok) throw new Error("TTS failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+
+      audio.onended = () => { setAudioState("idle"); audioRef.current = null; };
+      audio.onerror = () => { setAudioState("idle"); audioRef.current = null; };
+
+      await audio.play();
+      setAudioState("playing");
+    } catch (err) {
+      console.error("Audio error:", err);
+      setAudioState("idle");
+    }
+  };
+
   const finishAndHome = async () => {
+    stopAudio();
     const xpEarned = quizAnswer === lesson?.quiz?.answerIndex ? 20 : 5;
     const quizCorrect = quizAnswer === lesson?.quiz?.answerIndex;
     if (user?.googleId) {
@@ -577,8 +626,23 @@ export default function App() {
               <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px 20px", position: "relative" }}>
                 <GlowOrb top={-40} left={160} color={topicGlow} size={180} />
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, position: "relative", zIndex: 1 }}>
-                  <button onClick={() => setScreen("time")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: 0 }}>← Exit</button>
-                  <div style={{ fontSize: 10, color: C.textMuted }}>{selectedTime?.label} read</div>
+                  <button onClick={() => { stopAudio(); setScreen("time"); }} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", padding: 0 }}>← Exit</button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ fontSize: 10, color: C.textMuted }}>{selectedTime?.label} read</div>
+                    <button onClick={playLesson} style={{
+                      width: 30, height: 30, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s",
+                      background: audioState === "playing" ? C.gradient : audioState === "loading" ? "rgba(160,100,255,0.15)" : "rgba(255,255,255,0.06)",
+                      boxShadow: audioState === "playing" ? `0 2px 12px ${C.accentGlow}` : "none",
+                    }}>
+                      {audioState === "loading" ? (
+                        <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.15)", borderTop: "2px solid #a064ff", animation: "spin .8s linear infinite" }} />
+                      ) : audioState === "playing" ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                      ) : (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill={C.accent}><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 {error && <div style={{ background: "rgba(245,158,11,0.06)", border: "0.5px solid rgba(245,158,11,0.15)", borderRadius: 10, padding: "8px 12px", color: "#f59e0b", fontSize: 11, marginBottom: 12, position: "relative", zIndex: 1 }}>⚠ {error}</div>}
                 <div style={{ height: 2, background: "rgba(255,255,255,0.04)", borderRadius: 1, marginBottom: 16, overflow: "hidden", position: "relative", zIndex: 1 }}><div style={{ width: "65%", height: "100%", background: C.gradient, borderRadius: 1 }} /></div>
@@ -608,7 +672,27 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <div style={{ flexShrink: 0, padding: "12px 24px 26px", position: "relative", zIndex: 1, background: `linear-gradient(0deg, ${C.bg} 60%, transparent)` }}><button className="btn-primary" onClick={() => setScreen("quiz")}>Quick reflection →</button></div>
+              <div style={{ flexShrink: 0, padding: "0 24px 26px", position: "relative", zIndex: 1, background: `linear-gradient(0deg, ${C.bg} 60%, transparent)` }}>
+                {audioState !== "idle" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(160,100,255,0.06)", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 12, marginBottom: 10 }}>
+                    <button onClick={playLesson} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: audioState === "playing" ? C.gradient : "rgba(255,255,255,0.08)", flexShrink: 0 }}>
+                      {audioState === "loading" ? (
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.15)", borderTop: "2px solid #a064ff", animation: "spin .8s linear infinite" }} />
+                      ) : audioState === "playing" ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                      ) : (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                      )}
+                    </button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, color: "#fff", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lesson?.title}</div>
+                      <div style={{ fontSize: 9, color: C.textMuted }}>{audioState === "loading" ? "Generating audio..." : audioState === "playing" ? "Playing" : "Paused"}</div>
+                    </div>
+                    <button onClick={stopAudio} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, fontSize: 14, padding: "2px 4px" }}>✕</button>
+                  </div>
+                )}
+                <button className="btn-primary" onClick={() => { stopAudio(); setScreen("quiz"); }}>Quick reflection →</button>
+              </div>
             </div>
           )}
 
