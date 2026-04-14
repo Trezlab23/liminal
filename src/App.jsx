@@ -222,7 +222,7 @@ export default function App() {
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => { setShowCustomTopic(false); setCustomTopicText(""); setSelectedTopics(p => p.includes(id) ? [] : [id]); };
-
+  const selectCustomTopic = (text) => { if (text.trim()) { setSelectedTopics([text.trim()]); setShowCustomTopic(false); } };
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
@@ -513,17 +513,25 @@ export default function App() {
                     onBlur={e => e.target.style.borderColor = "rgba(192,132,252,0.25)"}
                     onKeyDown={e => { if (e.key === "Enter" && customTopicText.trim()) setScreen("time"); }}
                   />
-                  {/* Suggestion chips */}
+                  {/* Suggestion chips — dynamic based on history */}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-                    {["Stoic Philosophy", "Space Exploration", "Nutrition Science", "Blockchain", "Urban Design", "Music Theory"].map(s => (
-                      <button key={s} onClick={() => { setCustomTopicText(s); setSelectedTopics([s]); }} style={{
-                        padding: "6px 12px", background: customTopicText === s ? "rgba(192,132,252,0.12)" : "rgba(255,255,255,0.03)",
-                        border: `0.5px solid ${customTopicText === s ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 20,
-                        color: customTopicText === s ? "#c084fc" : C.textSub, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all .2s",
-                      }}>
-                        {s}
-                      </button>
-                    ))}
+                    {(() => {
+                      const allSuggestions = ["Stoic Philosophy", "Space Exploration", "Nutrition Science", "Blockchain", "Urban Design", "Music Theory", "Behavioral Economics", "Climate Science", "Ancient History", "Machine Learning", "Photography", "Meditation", "Game Theory", "Architecture", "Neuroscience", "Mythology", "Cryptography", "Linguistics"];
+                      const pastCustomTopics = lessonHistory.map(l => l.topicId).filter(id => !TOPICS.find(t => t.id === id));
+                      const explored = new Set(pastCustomTopics.map(t => t.toLowerCase()));
+                      const fresh = allSuggestions.filter(s => !explored.has(s.toLowerCase()));
+                      // Show 6: mix of fresh suggestions, shuffled
+                      const shuffled = fresh.sort(() => Math.random() - 0.5).slice(0, 6);
+                      return shuffled.map(s => (
+                        <button key={s} onClick={() => { setCustomTopicText(s); setSelectedTopics([s]); }} style={{
+                          padding: "6px 12px", background: customTopicText === s ? "rgba(192,132,252,0.12)" : "rgba(255,255,255,0.03)",
+                          border: `0.5px solid ${customTopicText === s ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 20,
+                          color: customTopicText === s ? "#c084fc" : C.textSub, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all .2s",
+                        }}>
+                          {s}
+                        </button>
+                      ));
+                    })()}
                   </div>
                 </div>
               )}
@@ -653,40 +661,50 @@ export default function App() {
                 <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 20 }}>{totalLessonsAllTopics} lesson{totalLessonsAllTopics !== 1 ? "s" : ""} completed across {topicProgress.length} topic{topicProgress.length !== 1 ? "s" : ""}</div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {TOPICS.map(t => {
-                    const prog = topicProgress.find(p => p.topicId === t.id);
-                    const count = prog?.lessonCount || 0;
-                    const correct = prog?.correctCount || 0;
-                    const xp = prog?.totalXp || 0;
-                    const accuracy = count > 0 ? Math.round((correct / count) * 100) : 0;
-                    const level = getLevel(count);
-                    return (
-                      <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: count > 0 ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.01) 100%)` : C.surface, border: `0.5px solid ${count > 0 ? t.color + "33" : C.border}`, borderRadius: 16, transition: "all .3s" }}>
-                        <div style={{ position: "relative", flexShrink: 0 }}>
-                          <ProgressRing percent={level.progress} color={t.color} size={48} strokeWidth={3} />
-                          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{t.icon}</div>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                            <span style={{ fontSize: 13, color: "#fff", fontWeight: 400 }}>{t.label}</span>
-                            {count > 0 && <span style={{ fontSize: 8, color: t.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, background: t.glow, padding: "2px 6px", borderRadius: 3 }}>{level.name}</span>}
+                  {(() => {
+                    // Combine preset topics with any custom topics from history
+                    const presetIds = TOPICS.map(t => t.id);
+                    const customFromHistory = topicProgress
+                      .filter(p => !presetIds.includes(p.topicId))
+                      .map(p => ({ id: p.topicId, icon: "✨", label: p.topicId, color: "#c084fc", glow: "rgba(192,132,252,.2)" }));
+                    const allTopics = [...TOPICS, ...customFromHistory];
+
+                    return allTopics.map(t => {
+                      const prog = topicProgress.find(p => p.topicId === t.id);
+                      const count = prog?.lessonCount || 0;
+                      const correct = prog?.correctCount || 0;
+                      const xp = prog?.totalXp || 0;
+                      const accuracy = count > 0 ? Math.round((correct / count) * 100) : 0;
+                      const level = getLevel(count);
+                      if (!presetIds.includes(t.id) && count === 0) return null; // don't show empty custom topics
+                      return (
+                        <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: count > 0 ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.01) 100%)` : C.surface, border: `0.5px solid ${count > 0 ? t.color + "33" : C.border}`, borderRadius: 16, transition: "all .3s" }}>
+                          <div style={{ position: "relative", flexShrink: 0 }}>
+                            <ProgressRing percent={level.progress} color={t.color} size={48} strokeWidth={3} />
+                            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{t.icon}</div>
                           </div>
-                          {count > 0 ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                              <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textSub }}>
-                                <span>{count} lesson{count !== 1 ? "s" : ""}</span>
-                                <span>{xp} XP</span>
-                                <span>{accuracy}%</span>
-                              </div>
-                              {level.next && <div style={{ fontSize: 9, color: C.textMuted }}>{level.lessonsToNext} more to {level.next}</div>}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                              <span style={{ fontSize: 13, color: "#fff", fontWeight: 400 }}>{t.label}</span>
+                              {count > 0 && <span style={{ fontSize: 8, color: t.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, background: t.glow, padding: "2px 6px", borderRadius: 3 }}>{level.name}</span>}
                             </div>
-                          ) : (
-                            <div style={{ fontSize: 10, color: C.textMuted }}>Not started yet</div>
-                          )}
+                            {count > 0 ? (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textSub }}>
+                                  <span>{count} lesson{count !== 1 ? "s" : ""}</span>
+                                  <span>{xp} XP</span>
+                                  <span>{accuracy}%</span>
+                                </div>
+                                {level.next && <div style={{ fontSize: 9, color: C.textMuted }}>{level.lessonsToNext} more to {level.next}</div>}
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: 10, color: C.textMuted }}>Not started yet</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
 
                 {totalLessonsAllTopics === 0 && (
