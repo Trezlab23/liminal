@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "";
 
@@ -224,6 +224,14 @@ export default function App() {
   const topicColor = topicObj?.color || C.accent;
   const topicGlow = topicObj?.glow || C.accentGlow;
   const toggleTopic = (id) => { setShowCustomTopic(false); setCustomTopicText(""); setSelectedTopics(p => p.includes(id) ? [] : [id]); };
+
+  const suggestionChips = useMemo(() => {
+    const allSuggestions = ["Stoic Philosophy", "Space Exploration", "Nutrition Science", "Blockchain", "Urban Design", "Music Theory", "Behavioral Economics", "Climate Science", "Ancient History", "Machine Learning", "Photography", "Meditation", "Game Theory", "Architecture", "Neuroscience", "Mythology", "Cryptography", "Linguistics"];
+    const pastCustomTopics = lessonHistory.map(l => l.topicId).filter(id => !TOPICS.find(t => t.id === id));
+    const explored = new Set(pastCustomTopics.map(t => t.toLowerCase()));
+    const fresh = allSuggestions.filter(s => !explored.has(s.toLowerCase()));
+    return fresh.sort(() => Math.random() - 0.5).slice(0, 6);
+  }, [lessonHistory]);
 
   const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
@@ -564,23 +572,15 @@ export default function App() {
                   />
                   {/* Suggestion chips — dynamic based on history */}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-                    {(() => {
-                      const allSuggestions = ["Stoic Philosophy", "Space Exploration", "Nutrition Science", "Blockchain", "Urban Design", "Music Theory", "Behavioral Economics", "Climate Science", "Ancient History", "Machine Learning", "Photography", "Meditation", "Game Theory", "Architecture", "Neuroscience", "Mythology", "Cryptography", "Linguistics"];
-                      const pastCustomTopics = lessonHistory.map(l => l.topicId).filter(id => !TOPICS.find(t => t.id === id));
-                      const explored = new Set(pastCustomTopics.map(t => t.toLowerCase()));
-                      const fresh = allSuggestions.filter(s => !explored.has(s.toLowerCase()));
-                      // Show 6: mix of fresh suggestions, shuffled
-                      const shuffled = fresh.sort(() => Math.random() - 0.5).slice(0, 6);
-                      return shuffled.map(s => (
-                        <button key={s} onClick={() => { setCustomTopicText(s); setSelectedTopics([s]); }} style={{
-                          padding: "6px 12px", background: customTopicText === s ? "rgba(192,132,252,0.12)" : "rgba(255,255,255,0.03)",
-                          border: `0.5px solid ${customTopicText === s ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 20,
-                          color: customTopicText === s ? "#c084fc" : C.textSub, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all .2s",
-                        }}>
-                          {s}
-                        </button>
-                      ));
-                    })()}
+                    {suggestionChips.map(s => (
+                      <button key={s} onClick={() => { setCustomTopicText(s); setSelectedTopics([s]); }} style={{
+                        padding: "6px 12px", background: customTopicText === s ? "rgba(192,132,252,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `0.5px solid ${customTopicText === s ? "rgba(192,132,252,0.3)" : C.border}`, borderRadius: 20,
+                        color: customTopicText === s ? "#c084fc" : C.textSub, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all .2s",
+                      }}>
+                        {s}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
