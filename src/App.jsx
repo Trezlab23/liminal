@@ -477,17 +477,26 @@ export default function App() {
                     <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 30, color: "#fff", letterSpacing: 5, textTransform: "uppercase" }}>Liminal</div>
                     <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 3, textTransform: "uppercase", marginTop: 3 }}>Micro-learning · AI</div>
                   </div>
-                  <div style={{ position: "relative" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
                     <button onClick={() => user.guest ? handleLogout() : setShowAccountMenu(p => !p)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
                       {user.guest ? <span style={{ fontSize: 11, color: C.accent }}>Sign in</span>
                         : user.picture ? <img src={user.picture} alt="" style={{ width: 28, height: 28, borderRadius: "50%", border: `1.5px solid ${showAccountMenu ? C.accent : "rgba(255,255,255,0.1)"}` }} referrerPolicy="no-referrer" />
                         : <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(160,100,255,0.15)", border: "1px solid rgba(160,100,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: C.accent }}>{user.name?.[0] || "?"}</div>}
                     </button>
-                    {showAccountMenu && !user.guest && (
+                    {showAccountMenu && (
                       <div style={{ position: "absolute", top: 36, right: 0, width: 180, zIndex: 20, background: "#1a1525", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,.6)", overflow: "hidden" }}>
-                        <div style={{ padding: "12px 14px 8px", borderBottom: `0.5px solid ${C.border}` }}><div style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{user.name}</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{user.email}</div></div>
-                        <button onClick={handleLogout} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Sign out</button>
-                        <button onClick={handleDeleteAccount} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", color: C.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Delete account</button>
+                        {!user.guest && <div style={{ padding: "12px 14px 8px", borderBottom: `0.5px solid ${C.border}` }}><div style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{user.name}</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{user.email}</div></div>}
+                        <button onClick={() => { setShowAccountMenu(false); setScreen("about"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About
+                        </button>
+                        <button onClick={() => { setShowAccountMenu(false); setScreen("privacy"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Privacy
+                        </button>
+                        <button onClick={() => { setShowAccountMenu(false); setScreen("terms"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: !user.guest ? `0.5px solid ${C.border}` : "none", color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Terms
+                        </button>
+                        {!user.guest && <button onClick={handleLogout} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Sign out</button>}
+                        {!user.guest && <button onClick={handleDeleteAccount} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", color: C.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Delete account</button>}
                       </div>
                     )}
                   </div>
@@ -1068,6 +1077,111 @@ export default function App() {
               </div>
             );
           })()}
+          {/* ABOUT */}
+          {user && screen === "about" && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-40} left={80} color="rgba(160,100,255,0.1)" size={200} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 20, padding: 0 }}>← Back</button>
+                <div style={{ textAlign: "center", marginBottom: 24 }}>
+                  <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={32} /></div>
+                  <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 24, color: "#fff", letterSpacing: 5, textTransform: "uppercase" }}>Liminal</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Version 1.0</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Glass style={{ padding: 16 }}>
+                    <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal turns idle moments into knowledge. Every lesson is freshly composed by AI, adapting to your time, interests, and learning pace. No two lessons are ever the same.</div>
+                  </Glass>
+                  <Glass style={{ padding: 16 }}>
+                    <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Powered by</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Anthropic Claude AI — Lesson generation</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>ElevenLabs — Voice narration</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Neon Postgres — Data storage</div>
+                  </Glass>
+                  <Glass style={{ padding: 16 }}>
+                    <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Built by</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Trez</div>
+                    <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>liminal-coral.vercel.app</div>
+                  </Glass>
+                </div>
+              </div>
+            </Screen>
+          )}
+
+          {/* PRIVACY */}
+          {user && screen === "privacy" && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-30} left={160} color="rgba(160,100,255,0.08)" size={160} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 20, padding: 0 }}>← Back</button>
+                <div style={{ marginBottom: 20 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#fff", fontWeight: 200, marginTop: 6 }}>Privacy policy</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Last updated: April 2026</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>What we collect</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>When you sign in with Google, we store your name, email, and profile photo. We also store your lesson history, quiz responses, and learning progress.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>How we use it</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Your data is used to personalize lessons, track your progress, maintain your streak, and improve the learning experience over time.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Data deletion</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>You can delete your account at any time from the menu on the home screen. This permanently removes all your data including lesson history and progress.</div>
+                  </Glass>
+                  <div style={{ padding: 14, background: "rgba(74,222,128,0.04)", border: "0.5px solid rgba(74,222,128,0.1)", borderRadius: 16 }}>
+                    <div style={{ fontSize: 9, color: C.green, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>We never</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Sell your data, display ads, or share your personal information with third parties. Your learning data stays between you and Liminal.</div>
+                  </div>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Third-party services</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal uses Google for authentication, Anthropic's Claude for lesson generation, and ElevenLabs for audio narration. Each service has its own privacy policy.</div>
+                  </Glass>
+                </div>
+              </div>
+            </Screen>
+          )}
+
+          {/* TERMS */}
+          {user && screen === "terms" && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-30} left={100} color="rgba(160,100,255,0.08)" size={160} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 20, padding: 0 }}>← Back</button>
+                <div style={{ marginBottom: 20 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#fff", fontWeight: 200, marginTop: 6 }}>Terms of service</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Last updated: April 2026</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>The service</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal provides AI-generated educational micro-lessons. The service is provided as-is and is designed for informational and personal learning purposes.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>AI-generated content</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>All lessons are generated by artificial intelligence and may contain inaccuracies. Content should not be relied upon as professional advice. Always verify critical information from authoritative sources.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Your account</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>You are responsible for maintaining the security of your account. We reserve the right to suspend or terminate accounts that violate these terms or engage in abusive behavior.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Intellectual property</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Lesson content is generated uniquely for each session. You may share and reference lessons for personal use. The Liminal brand, design, and technology remain our property.</div>
+                  </Glass>
+                  <Glass style={{ padding: 14 }}>
+                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Changes to terms</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>We may update these terms from time to time. Continued use of the service after changes constitutes acceptance of the updated terms.</div>
+                  </Glass>
+                </div>
+              </div>
+            </Screen>
+          )}
+
         </div>
 
         {/* NAV — 4 tabs */}
