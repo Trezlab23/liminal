@@ -1110,7 +1110,7 @@ export default function App() {
                   </Glass>
                   <Glass style={{ padding: 16 }}>
                     <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Built by</div>
-                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Trez</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Liminal Dev Team</div>
                     <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>liminal-coral.vercel.app</div>
                   </Glass>
                 </div>
