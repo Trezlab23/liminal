@@ -1109,14 +1109,8 @@ export default function App() {
                     <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal turns idle moments into knowledge. Every lesson is freshly composed by AI, adapting to your time, interests, and learning pace. No two lessons are ever the same.</div>
                   </Glass>
                   <Glass style={{ padding: 16 }}>
-                    <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Powered by</div>
-                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Anthropic Claude AI — Lesson generation</div>
-                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>ElevenLabs — Voice narration</div>
-                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Neon Postgres — Data storage</div>
-                  </Glass>
-                  <Glass style={{ padding: 16 }}>
                     <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Built by</div>
-                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Liminal Dev Team</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Trez</div>
                     <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>liminal-coral.vercel.app</div>
                   </Glass>
                 </div>
@@ -1154,7 +1148,7 @@ export default function App() {
                   </div>
                   <Glass style={{ padding: 14 }}>
                     <div style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Third-party services</div>
-                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal uses Google for authentication, Anthropic's Claude for lesson generation, and ElevenLabs for audio narration. Each service has its own privacy policy.</div>
+                    <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.7, fontWeight: 300 }}>Liminal uses third-party services for authentication, content generation, and audio narration. Each service operates under its own privacy policy.</div>
                   </Glass>
                 </div>
               </div>
