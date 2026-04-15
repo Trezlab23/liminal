@@ -183,6 +183,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showAppMenu, setShowAppMenu] = useState(false);
   const [lessonHistory, setLessonHistory] = useState([]);
   const [topicProgress, setTopicProgress] = useState([]);
   const [viewingLesson, setViewingLesson] = useState(null);
@@ -216,7 +217,7 @@ export default function App() {
 
   useEffect(() => { if (user?.googleId) fetchLessonData(); }, [user?.googleId, fetchLessonData]);
 
-  const handleLogout = () => { setUser(null); setShowAccountMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); };
+  const handleLogout = () => { setUser(null); setShowAccountMenu(false); setShowAppMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); };
   const handleDeleteAccount = async () => { if (!user?.googleId) { handleLogout(); return; } if (!window.confirm("This will permanently delete your account and all your progress. Are you sure?")) return; try { await fetch("/api/auth/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId }) }); } catch {} handleLogout(); };
   const handleGuestLogin = () => { setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 }); };
 
@@ -477,28 +478,43 @@ export default function App() {
                     <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 200, fontSize: 30, color: "#fff", letterSpacing: 5, textTransform: "uppercase" }}>Liminal</div>
                     <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 3, textTransform: "uppercase", marginTop: 3 }}>Micro-learning · AI</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
-                    <button onClick={() => user.guest ? handleLogout() : setShowAccountMenu(p => !p)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                      {user.guest ? <span style={{ fontSize: 11, color: C.accent }}>Sign in</span>
-                        : user.picture ? <img src={user.picture} alt="" style={{ width: 28, height: 28, borderRadius: "50%", border: `1.5px solid ${showAccountMenu ? C.accent : "rgba(255,255,255,0.1)"}` }} referrerPolicy="no-referrer" />
-                        : <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(160,100,255,0.15)", border: "1px solid rgba(160,100,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: C.accent }}>{user.name?.[0] || "?"}</div>}
-                    </button>
-                    {showAccountMenu && (
-                      <div style={{ position: "absolute", top: 36, right: 0, width: 180, zIndex: 20, background: "#1a1525", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,.6)", overflow: "hidden" }}>
-                        {!user.guest && <div style={{ padding: "12px 14px 8px", borderBottom: `0.5px solid ${C.border}` }}><div style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{user.name}</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{user.email}</div></div>}
-                        <button onClick={() => { setShowAccountMenu(false); setScreen("about"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About
-                        </button>
-                        <button onClick={() => { setShowAccountMenu(false); setScreen("privacy"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Privacy
-                        </button>
-                        <button onClick={() => { setShowAccountMenu(false); setScreen("terms"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: !user.guest ? `0.5px solid ${C.border}` : "none", color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Terms
-                        </button>
-                        {!user.guest && <button onClick={handleLogout} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Sign out</button>}
-                        {!user.guest && <button onClick={handleDeleteAccount} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", color: C.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Delete account</button>}
-                      </div>
-                    )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* Three-dot menu — app pages */}
+                    <div style={{ position: "relative" }}>
+                      <button onClick={() => { setShowAppMenu(p => !p); setShowAccountMenu(false); }} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 2px", display: "flex", flexDirection: "column", gap: 3 }}>
+                        <div style={{ width: 3, height: 3, borderRadius: "50%", background: showAppMenu ? C.accent : "rgba(255,255,255,0.3)" }} />
+                        <div style={{ width: 3, height: 3, borderRadius: "50%", background: showAppMenu ? C.accent : "rgba(255,255,255,0.3)" }} />
+                        <div style={{ width: 3, height: 3, borderRadius: "50%", background: showAppMenu ? C.accent : "rgba(255,255,255,0.3)" }} />
+                      </button>
+                      {showAppMenu && (
+                        <div style={{ position: "absolute", top: 32, right: 0, width: 170, zIndex: 20, background: "#1a1525", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,.6)", overflow: "hidden" }}>
+                          <button onClick={() => { setShowAppMenu(false); setScreen("about"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About
+                          </button>
+                          <button onClick={() => { setShowAppMenu(false); setScreen("privacy"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Privacy
+                          </button>
+                          <button onClick={() => { setShowAppMenu(false); setScreen("terms"); }} style={{ display: "flex", width: "100%", alignItems: "center", gap: 8, padding: "10px 14px", background: "none", border: "none", color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Terms
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {/* Avatar — account actions */}
+                    <div style={{ position: "relative" }}>
+                      <button onClick={() => { if (user.guest) { handleLogout(); } else { setShowAccountMenu(p => !p); setShowAppMenu(false); } }} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+                        {user.guest ? <span style={{ fontSize: 11, color: C.accent }}>Sign in</span>
+                          : user.picture ? <img src={user.picture} alt="" style={{ width: 28, height: 28, borderRadius: "50%", border: `1.5px solid ${showAccountMenu ? C.accent : "rgba(255,255,255,0.1)"}` }} referrerPolicy="no-referrer" />
+                          : <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(160,100,255,0.15)", border: "1px solid rgba(160,100,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: C.accent }}>{user.name?.[0] || "?"}</div>}
+                      </button>
+                      {showAccountMenu && !user.guest && (
+                        <div style={{ position: "absolute", top: 36, right: 0, width: 180, zIndex: 20, background: "#1a1525", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,.6)", overflow: "hidden" }}>
+                          <div style={{ padding: "12px 14px 8px", borderBottom: `0.5px solid ${C.border}` }}><div style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{user.name}</div><div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{user.email}</div></div>
+                          <button onClick={handleLogout} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", borderBottom: `0.5px solid ${C.border}`, color: C.textSub, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Sign out</button>
+                          <button onClick={handleDeleteAccount} style={{ display: "block", width: "100%", padding: "10px 14px", background: "none", border: "none", color: C.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "left", cursor: "pointer" }}>Delete account</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Glass style={{ padding: "18px 18px 16px", marginBottom: 16 }}>
@@ -566,7 +582,7 @@ export default function App() {
                   ) : null;
                 })()}
               </div>
-              <div style={{ marginTop: 18, position: "relative", zIndex: 1 }}><button className="btn-primary" onClick={() => { setShowAccountMenu(false); setScreen("topics"); }}>Begin a session →</button></div>
+              <div style={{ marginTop: 18, position: "relative", zIndex: 1 }}><button className="btn-primary" onClick={() => { setShowAccountMenu(false); setShowAppMenu(false); setScreen("topics"); }}>Begin a session →</button></div>
             </Screen>
           )}
 
@@ -1193,7 +1209,7 @@ export default function App() {
               { label: "History", s: "history", Icon: NavHistory },
               { label: "Learn", s: "topics", Icon: NavLearn },
             ].map(n => (
-              <button key={n.label} onClick={() => { setShowAccountMenu(false); setViewingLesson(null); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
+              <button key={n.label} onClick={() => { setShowAccountMenu(false); setShowAppMenu(false); setViewingLesson(null); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
                 <n.Icon active={screen === n.s || (n.s === "topics" && screen === "time")} />
                 <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
