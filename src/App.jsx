@@ -187,7 +187,6 @@ export default function App() {
   const [lessonHistory, setLessonHistory] = useState([]);
   const [topicProgress, setTopicProgress] = useState([]);
   const [viewingLesson, setViewingLesson] = useState(null);
-  const [webviewUrl, setWebviewUrl] = useState(null);
   const [onboardSlide, setOnboardSlide] = useState(() => {
     return localStorage.getItem("liminal_onboarded") ? 3 : 0;
   });
@@ -741,14 +740,12 @@ export default function App() {
                     <div style={{ marginTop: 2 }}>
                       <div style={{ fontSize: 8, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Go deeper</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {lesson.furtherReading.map((item, i) => { const typeIcons = { book: "📖", article: "📄", paper: "📑", talk: "🎤" }; const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(item.title+" "+item.author)}`; return (
-                          <button key={i} onClick={() => setWebviewUrl({ url: searchUrl, title: item.title })} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 12, cursor: "pointer", transition: "all .2s", width: "100%", textAlign: "left", fontFamily: "'Outfit',sans-serif" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = C.surface; e.currentTarget.style.borderColor = C.border; }}>
+                        {lesson.furtherReading.map((item, i) => { const typeIcons = { book: "📖", article: "📄", paper: "📑", talk: "🎤" }; return (
+                          <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(item.title+" "+item.author)}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", background: C.surface, border: `0.5px solid ${C.border}`, borderRadius: 12, textDecoration: "none", transition: "all .2s" }}>
                             <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{typeIcons[item.type?.toLowerCase()]||"📌"}</span>
                             <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontSize: 11, color: C.text, fontWeight: 400, lineHeight: 1.4 }}>{item.title}</div><div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{item.author}{item.type ? ` · ${item.type.charAt(0).toUpperCase()+item.type.slice(1)}` : ""}</div></div>
-                            <span style={{ fontSize: 9, color: C.textMuted, flexShrink: 0, marginTop: 2 }}>→</span>
-                          </button>); })}
+                            <span style={{ fontSize: 9, color: C.textMuted, flexShrink: 0, marginTop: 2 }}>↗</span>
+                          </a>); })}
                       </div>
                     </div>
                   )}
@@ -1232,22 +1229,6 @@ export default function App() {
                 <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
             ))}
-          </div>
-        )}
-
-        {/* WEBVIEW MODAL */}
-        {webviewUrl && (
-          <div style={{ position: "absolute", inset: 0, background: C.bg, zIndex: 100, display: "flex", flexDirection: "column", animation: "fadeUp 0.3s ease forwards" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `0.5px solid ${C.border}`, flexShrink: 0, background: C.bg }}>
-              <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
-                <div style={{ fontSize: 8, color: C.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 2 }}>Go deeper</div>
-                <div style={{ fontSize: 12, color: C.text, fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{webviewUrl.title}</div>
-              </div>
-              <button onClick={() => setWebviewUrl(null)} style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <iframe src={webviewUrl.url} title="Go deeper" style={{ flex: 1, border: "none", background: "#fff" }} sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
           </div>
         )}
       </div>
