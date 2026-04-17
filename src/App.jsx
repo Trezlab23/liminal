@@ -327,7 +327,16 @@ export default function App() {
         fetchLessonData();
       } catch {}
     } else if (user?.guest) {
-      setUser(prev => ({ ...prev, xp: (prev.xp||0)+xpEarned, lessonCount: (prev.lessonCount||0)+1, streak: (prev.streak||0)+1 }));
+      const today = new Date().toISOString().slice(0, 10);
+      const lastDate = user.lastLessonDate ? new Date(user.lastLessonDate).toISOString().slice(0, 10) : null;
+      let newStreak;
+      if (lastDate === today) { newStreak = user.streak || 0; }
+      else if (lastDate) {
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().slice(0, 10);
+        newStreak = lastDate === yesterdayStr ? (user.streak || 0) + 1 : 1;
+      } else { newStreak = 1; }
+      setUser(prev => ({ ...prev, xp: (prev.xp||0)+xpEarned, lessonCount: (prev.lessonCount||0)+1, streak: newStreak, lastLessonDate: today }));
       // Save to local guest history
       setLessonHistory(prev => [{ id: Date.now(), topicId: lesson._topicId, title: lesson.title, hook: lesson.hook, badge: lesson.badge, quizCorrect, xpEarned, duration: selectedTime?.value, createdAt: new Date().toISOString() }, ...prev]);
       setTopicProgress(prev => {
@@ -797,8 +806,20 @@ export default function App() {
                 <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 200, fontSize: 26, color: "#fff", marginBottom: 6 }}>Session complete.</div>
                 <div style={{ color: C.textMuted, marginBottom: 26, fontStyle: "italic", fontFamily: "'Sora',sans-serif", fontSize: 14, fontWeight: 200 }}>Another moment well spent.</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 22 }}>
-                  {[{ label: "XP earned", val: quizAnswer === lesson?.quiz?.answerIndex ? "+20" : "+5", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "Streak", val: `${(user.streak||0)+1} days`, color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lesson", val: "Complete", color: C.green, bg: "rgba(74,222,128,0.05)", bc: "rgba(74,222,128,0.1)" }, { label: "Time", val: selectedTime?.label||"—", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
-                    <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 18, color: s.color }}>{s.val}</div><div style={{ fontSize: 8, color: C.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: 1.2 }}>{s.label}</div></div>))}
+                  {(() => {
+                    // Compute what the streak will be after this session
+                    const today = new Date().toISOString().slice(0, 10);
+                    const lastDate = user.lastLessonDate ? new Date(user.lastLessonDate).toISOString().slice(0, 10) : null;
+                    let projectedStreak;
+                    if (lastDate === today) { projectedStreak = user.streak || 0; }
+                    else if (lastDate) {
+                      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+                      projectedStreak = lastDate === yesterdayStr ? (user.streak || 0) + 1 : 1;
+                    } else { projectedStreak = 1; }
+                    return [{ label: "XP earned", val: quizAnswer === lesson?.quiz?.answerIndex ? "+20" : "+5", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "Streak", val: `${projectedStreak} day${projectedStreak !== 1 ? "s" : ""}`, color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lesson", val: "Complete", color: C.green, bg: "rgba(74,222,128,0.05)", bc: "rgba(74,222,128,0.1)" }, { label: "Time", val: selectedTime?.label||"—", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
+                    <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 18, color: s.color }}>{s.val}</div><div style={{ fontSize: 8, color: C.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: 1.2 }}>{s.label}</div></div>));
+                  })()}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -1110,7 +1131,7 @@ export default function App() {
                   </Glass>
                   <Glass style={{ padding: 16 }}>
                     <div style={{ fontSize: 8, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Built by</div>
-                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Liminal Dev Team</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 400 }}>Trez</div>
                     <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>liminal-coral.vercel.app</div>
                   </Glass>
                 </div>
