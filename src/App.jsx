@@ -1092,36 +1092,85 @@ export default function App() {
               <GlowOrb top={50} left={60} color="rgba(160,100,255,0.1)" size={220} />
               <GlowOrb top={400} left={180} color="rgba(255,60,120,0.06)" size={160} />
               <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
-                <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)" }}><MindPlanetIcon size={42} /></div>
-                <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 200, fontSize: 26, color: "#fff", marginBottom: 6 }}>Session complete.</div>
-                <div style={{ color: C.textMuted, marginBottom: 26, fontStyle: "italic", fontFamily: "'Sora',sans-serif", fontSize: 14, fontWeight: 200 }}>Another moment well spent.</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 22 }}>
-                  {(() => {
-                    // Compute what the streak will be after this session
-                    const today = new Date().toISOString().slice(0, 10);
-                    const lastDate = user.lastLessonDate ? new Date(user.lastLessonDate).toISOString().slice(0, 10) : null;
-                    let projectedStreak;
-                    if (lastDate === today) { projectedStreak = user.streak || 0; }
-                    else if (lastDate) {
-                      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                      const yesterdayStr = yesterday.toISOString().slice(0, 10);
-                      projectedStreak = lastDate === yesterdayStr ? (user.streak || 0) + 1 : 1;
-                    } else { projectedStreak = 1; }
-                    return [{ label: "XP earned", val: quizAnswer === lesson?.quiz?.answerIndex ? "+20" : "+5", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "Streak", val: `${projectedStreak} day${projectedStreak !== 1 ? "s" : ""}`, color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lesson", val: "Complete", color: C.green, bg: "rgba(74,222,128,0.05)", bc: "rgba(74,222,128,0.1)" }, { label: "Time", val: selectedTime?.label||"—", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
-                    <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 18, color: s.color }}>{s.val}</div><div style={{ fontSize: 8, color: C.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: 1.2 }}>{s.label}</div></div>));
-                  })()}
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-primary" onClick={startLesson} style={{ flex: 1 }}>Another lesson ✦</button>
-                    <button onClick={shareLesson} style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", flexShrink: 0 }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(160,100,255,0.08)"; e.currentTarget.style.borderColor = "rgba(160,100,255,0.2)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = C.border; }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    </button>
-                  </div>
-                  <button className="btn-secondary" onClick={finishAndHome}>Return home</button>
-                </div>
+                {(() => {
+                  // Path-aware completion state
+                  const inPath = lesson?._pathId;
+                  const path = inPath ? PATHS.find(p => p.id === lesson._pathId) : null;
+                  const currentIdx = path ? path.lessons.findIndex(l => l.id === lesson._pathLessonId) : -1;
+                  const nextLesson = path && currentIdx >= 0 && currentIdx + 1 < path.lessons.length ? path.lessons[currentIdx + 1] : null;
+                  const pathComplete = path && currentIdx === path.lessons.length - 1;
+                  const stepLabel = path ? `Lesson ${currentIdx + 1} of ${path.lessons.length}` : null;
+
+                  return (
+                    <>
+                      <div style={{ animation: "pulseGlow 3s ease-in-out infinite", width: 72, height: 72, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", background: pathComplete ? "rgba(74,222,128,0.08)" : "rgba(160,100,255,0.08)", border: `0.5px solid ${pathComplete ? "rgba(74,222,128,0.3)" : "rgba(160,100,255,0.2)"}` }}>
+                        {pathComplete ? <div style={{ fontSize: 38 }}>🎓</div> : <MindPlanetIcon size={42} />}
+                      </div>
+                      {inPath && <div style={{ fontSize: 9, color: path?.color || C.accent, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 600, marginBottom: 6 }}>{path?.title} · {stepLabel}</div>}
+                      <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 200, fontSize: 26, color: "#fff", marginBottom: 6 }}>
+                        {pathComplete ? "Path complete." : inPath ? "Lesson complete." : "Session complete."}
+                      </div>
+                      <div style={{ color: C.textMuted, marginBottom: 26, fontStyle: "italic", fontFamily: "'Sora',sans-serif", fontSize: 14, fontWeight: 200 }}>
+                        {pathComplete ? `You've mastered ${path.title}.` : inPath && nextLesson ? `Next up: ${nextLesson.title}` : "Another moment well spent."}
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 22 }}>
+                        {(() => {
+                          const today = new Date().toISOString().slice(0, 10);
+                          const lastDate = user.lastLessonDate ? new Date(user.lastLessonDate).toISOString().slice(0, 10) : null;
+                          let projectedStreak;
+                          if (lastDate === today) { projectedStreak = user.streak || 0; }
+                          else if (lastDate) {
+                            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                            const yesterdayStr = yesterday.toISOString().slice(0, 10);
+                            projectedStreak = lastDate === yesterdayStr ? (user.streak || 0) + 1 : 1;
+                          } else { projectedStreak = 1; }
+                          return [{ label: "XP earned", val: quizAnswer === lesson?.quiz?.answerIndex ? "+20" : "+5", color: C.accent, bg: "rgba(160,100,255,0.06)", bc: "rgba(160,100,255,0.1)" }, { label: "Streak", val: `${projectedStreak} day${projectedStreak !== 1 ? "s" : ""}`, color: C.pink, bg: "rgba(255,60,120,0.05)", bc: "rgba(255,60,120,0.1)" }, { label: "Lesson", val: "Complete", color: C.green, bg: "rgba(74,222,128,0.05)", bc: "rgba(74,222,128,0.1)" }, { label: "Time", val: selectedTime?.label||"—", color: C.blue, bg: "rgba(100,180,255,0.05)", bc: "rgba(100,180,255,0.1)" }].map(s => (
+                            <div key={s.label} style={{ background: s.bg, border: `0.5px solid ${s.bc}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 300, fontSize: 18, color: s.color }}>{s.val}</div><div style={{ fontSize: 8, color: C.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: 1.2 }}>{s.label}</div></div>));
+                        })()}
+                      </div>
+
+                      {/* Buttons — different depending on path context */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {inPath ? (
+                          <>
+                            {nextLesson ? (
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button className="btn-primary" onClick={async () => {
+                                  if (lesson?._pathId && lesson?._pathLessonId) markPathLessonComplete(lesson._pathId, lesson._pathLessonId);
+                                  await startPathLesson(path, nextLesson);
+                                }} style={{ flex: 1 }}>Next lesson ✦</button>
+                                <button onClick={shareLesson} style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", flexShrink: 0 }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button className="btn-primary" onClick={finishAndHome} style={{ flex: 1 }}>Back to path 🎓</button>
+                                <button onClick={shareLesson} style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", flexShrink: 0 }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                </button>
+                              </div>
+                            )}
+                            <button className="btn-secondary" onClick={finishAndHome}>{nextLesson ? "Back to path" : "Return home"}</button>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button className="btn-primary" onClick={startLesson} style={{ flex: 1 }}>Another lesson ✦</button>
+                              <button onClick={shareLesson} style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", flexShrink: 0 }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(160,100,255,0.08)"; e.currentTarget.style.borderColor = "rgba(160,100,255,0.2)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = C.border; }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                              </button>
+                            </div>
+                            <button className="btn-secondary" onClick={finishAndHome}>Return home</button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </Screen>
           )}
