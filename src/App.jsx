@@ -187,6 +187,10 @@ export default function App() {
   const [lessonHistory, setLessonHistory] = useState([]);
   const [topicProgress, setTopicProgress] = useState([]);
   const [viewingLesson, setViewingLesson] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [onboardSlide, setOnboardSlide] = useState(() => {
     return localStorage.getItem("liminal_onboarded") ? 3 : 0;
   });
@@ -234,7 +238,7 @@ export default function App() {
     return fresh.sort(() => Math.random() - 0.5).slice(0, 6);
   }, [lessonHistory]);
 
-  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
+  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
   const shareContent = async (text, title) => {
@@ -260,6 +264,35 @@ export default function App() {
     const text = `"${insightText}"\n\n— Learned this on Liminal`;
     shareContent(text, "Liminal Insight");
   };
+
+  const sendChatMessage = async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || chatLoading || !lesson) return;
+    const newUserMsg = { role: "user", content: trimmed };
+    const updatedMessages = [...chatMessages, newUserMsg];
+    setChatMessages(updatedMessages);
+    setChatInput("");
+    setChatLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lesson: { title: lesson.title, hook: lesson.hook, body: lesson.body, insightLabel: lesson.insightLabel, insight: lesson.insight, apply: lesson.apply }, history: chatMessages, message: trimmed }),
+      });
+      const data = await res.json();
+      if (res.ok && data.reply) {
+        setChatMessages([...updatedMessages, { role: "assistant", content: data.reply }]);
+      } else {
+        setChatMessages([...updatedMessages, { role: "assistant", content: "I'm having trouble thinking right now. Try again in a moment." }]);
+      }
+    } catch {
+      setChatMessages([...updatedMessages, { role: "assistant", content: "Connection issue. Try again in a moment." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const closeChat = () => { setShowChat(false); };
 
   const stopAudio = () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
@@ -709,6 +742,12 @@ export default function App() {
                       ) : (
                         <svg width="12" height="12" viewBox="0 0 24 24" fill={C.accent}><polygon points="6 3 20 12 6 21 6 3"/></svg>
                       )}
+                    </button>
+                    <button onClick={() => setShowChat(true)} style={{
+                      width: 30, height: 30, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s",
+                      background: chatMessages.length > 0 ? "rgba(160,100,255,0.15)" : "rgba(255,255,255,0.06)",
+                    }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={chatMessages.length > 0 ? C.accent : "#fff"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     </button>
                   </div>
                 </div>
@@ -1229,6 +1268,89 @@ export default function App() {
                 <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
             ))}
+          </div>
+        )}
+
+        {/* CHAT MODAL */}
+        {showChat && lesson && (
+          <div style={{ position: "absolute", inset: 0, background: C.bg, zIndex: 100, display: "flex", flexDirection: "column", animation: "fadeUp 0.3s ease forwards" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `0.5px solid ${C.border}`, flexShrink: 0 }}>
+              <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+                <div style={{ fontSize: 8, color: C.accent, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 2, fontWeight: 600 }}>Chatting about</div>
+                <div style={{ fontSize: 12, color: C.text, fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lesson.title}</div>
+              </div>
+              <button onClick={closeChat} style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {chatMessages.length === 0 && (
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 20 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(160,100,255,0.08)", border: "0.5px solid rgba(160,100,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  </div>
+                  <div style={{ fontSize: 14, color: C.text, fontFamily: "'Sora',sans-serif", fontWeight: 200, marginBottom: 6 }}>Ask anything</div>
+                  <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.6, maxWidth: 260, fontWeight: 300 }}>Explore this lesson deeper. Ask follow-up questions, connect ideas, or challenge the insights.</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 18, width: "100%", maxWidth: 280 }}>
+                    {["Give me a real-world example", "How does this relate to everyday life?", "What's a common misconception?"].map(prompt => (
+                      <button key={prompt} onClick={() => { setChatInput(prompt); }} style={{ padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(160,100,255,0.15)", borderRadius: 20, fontSize: 10, color: "#c084fc", cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(160,100,255,0.05)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}>
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {chatMessages.map((msg, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{
+                    maxWidth: msg.role === "user" ? "85%" : "90%",
+                    padding: "10px 12px",
+                    background: msg.role === "user" ? C.gradient : "rgba(255,255,255,0.04)",
+                    border: msg.role === "user" ? "none" : "0.5px solid rgba(255,255,255,0.06)",
+                    borderRadius: msg.role === "user" ? "14px 14px 2px 14px" : "14px 14px 14px 2px",
+                  }}>
+                    <div style={{ fontSize: 12, color: msg.role === "user" ? "#fff" : C.textSub, lineHeight: 1.6, whiteSpace: "pre-wrap", fontWeight: msg.role === "user" ? 400 : 300 }}>{msg.content}</div>
+                  </div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                  <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.06)", borderRadius: "14px 14px 14px 2px", display: "flex", gap: 4 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulseGlow 1s infinite", animationDelay: "0s" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulseGlow 1s infinite", animationDelay: "0.2s" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulseGlow 1s infinite", animationDelay: "0.4s" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <div style={{ padding: "10px 14px 16px", borderTop: `0.5px solid ${C.border}`, flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 4px 4px 14px", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 22 }}>
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !chatLoading) sendChatMessage(); }}
+                  placeholder="Ask anything about this lesson..."
+                  disabled={chatLoading}
+                  style={{ flex: 1, background: "none", border: "none", outline: "none", color: C.text, fontSize: 12, fontFamily: "'Outfit',sans-serif", padding: "8px 0" }}
+                />
+                <button onClick={sendChatMessage} disabled={!chatInput.trim() || chatLoading} style={{
+                  width: 30, height: 30, borderRadius: "50%", border: "none", cursor: chatInput.trim() && !chatLoading ? "pointer" : "default",
+                  background: chatInput.trim() && !chatLoading ? C.gradient : "rgba(255,255,255,0.06)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all .2s",
+                  opacity: chatInput.trim() && !chatLoading ? 1 : 0.4,
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
