@@ -260,7 +260,6 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("liminal_path_progress") || "{}"); }
     catch { return {}; }
   });
-  const [activePathLesson, setActivePathLesson] = useState(null); // { pathId, lessonId } when in a path lesson
   const [onboardSlide, setOnboardSlide] = useState(() => {
     return localStorage.getItem("liminal_onboarded") ? 3 : 0;
   });
@@ -308,11 +307,10 @@ export default function App() {
     return fresh.sort(() => Math.random() - 0.5).slice(0, 6);
   }, [lessonHistory]);
 
-  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false); setActivePathLesson(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
+  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
 
   const startPathLesson = async (path, pathLesson, duration = 10) => {
     setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false);
-    setActivePathLesson({ pathId: path.id, lessonId: pathLesson.id });
     setSelectedTime({ label: `${duration} min`, value: duration });
     // Use the detailed lesson prompt as the topic for generation
     const topicLabel = `${pathLesson.title}. ${pathLesson.prompt}`;
@@ -491,7 +489,7 @@ export default function App() {
     }
     const wasInPath = lesson?._pathId;
     const pathId = lesson?._pathId;
-    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setShowCustomTopic(false); setCustomTopicText(""); setActivePathLesson(null);
+    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setShowCustomTopic(false); setCustomTopicText("");
     // If they completed a path lesson, return to path detail view instead of home
     if (wasInPath) {
       const path = PATHS.find(p => p.id === pathId);
