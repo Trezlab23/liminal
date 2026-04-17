@@ -288,9 +288,24 @@ export default function App() {
     } catch {}
   }, [user?.googleId]);
 
-  useEffect(() => { if (user?.googleId) fetchLessonData(); }, [user?.googleId, fetchLessonData]);
+  const fetchPathProgress = useCallback(async () => {
+    if (!user?.googleId) return;
+    try {
+      const res = await fetch(`/api/paths?googleId=${user.googleId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.progress) {
+          setPathProgress(data.progress);
+          try { localStorage.setItem("liminal_path_progress", JSON.stringify(data.progress)); } catch {}
+        }
+      }
+    } catch {}
+  }, [user?.googleId]);
 
-  const handleLogout = () => { setUser(null); setShowAccountMenu(false); setShowAppMenu(false); localStorage.removeItem("liminal_user"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); };
+  useEffect(() => { if (user?.googleId) fetchLessonData(); }, [user?.googleId, fetchLessonData]);
+  useEffect(() => { if (user?.googleId) fetchPathProgress(); }, [user?.googleId, fetchPathProgress]);
+
+  const handleLogout = () => { setUser(null); setShowAccountMenu(false); setShowAppMenu(false); localStorage.removeItem("liminal_user"); localStorage.removeItem("liminal_path_progress"); if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect(); setScreen("home"); setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setQuizAnswer(null); setLessonHistory([]); setTopicProgress([]); setPathProgress({}); };
   const handleDeleteAccount = async () => { if (!user?.googleId) { handleLogout(); return; } if (!window.confirm("This will permanently delete your account and all your progress. Are you sure?")) return; try { await fetch("/api/auth/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ googleId: user.googleId }) }); } catch {} handleLogout(); };
   const handleGuestLogin = () => { setUser({ guest: true, name: "Explorer", streak: 0, xp: 0, lessonCount: 0 }); };
 
@@ -343,6 +358,14 @@ export default function App() {
       try { localStorage.setItem("liminal_path_progress", JSON.stringify(updated)); } catch {}
       return updated;
     });
+    // Persist to DB for signed-in users
+    if (user?.googleId) {
+      fetch("/api/paths", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ googleId: user.googleId, pathId, lessonId }),
+      }).catch(() => {});
+    }
   };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
