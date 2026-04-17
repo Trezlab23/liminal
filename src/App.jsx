@@ -11,6 +11,69 @@ const TOPICS = [
   { id: "creativity", icon: "🎨", label: "Creativity", color: "#c084fc", glow: "rgba(192,132,252,.2)" },
 ];
 
+const PATHS = [
+  {
+    id: "behavioral_economics",
+    icon: "🧠",
+    title: "Behavioral economics",
+    description: "How humans really make decisions — and how to use that knowledge.",
+    color: "#a064ff",
+    glow: "rgba(160,100,255,.2)",
+    lessons: [
+      { id: "be_1", title: "Why we're not rational", prompt: "Introduction to behavioral economics: the core idea that humans are predictably irrational. Explain how classical economics assumed rational actors and how Kahneman/Tversky disrupted this view." },
+      { id: "be_2", title: "Anchoring bias", prompt: "The anchoring bias: how the first number we hear shapes all subsequent judgments. Include the Tversky and Kahneman wheel-of-fortune experiment." },
+      { id: "be_3", title: "Loss aversion", prompt: "Loss aversion: why losing $100 hurts more than gaining $100 feels good. The psychology and real-world implications for negotiations and investing." },
+      { id: "be_4", title: "Social proof", prompt: "Social proof as a decision shortcut: why we follow the crowd. Include Asch conformity experiments and modern applications in marketing and UX design." },
+      { id: "be_5", title: "Prospect theory", prompt: "Prospect theory: the framework that earned Kahneman a Nobel Prize. How people evaluate gains and losses asymmetrically, and how framing changes decisions." },
+    ],
+  },
+  {
+    id: "space_cosmos",
+    icon: "🚀",
+    title: "Space & the cosmos",
+    description: "A journey from our solar system to the edge of the observable universe.",
+    color: "#64b4ff",
+    glow: "rgba(100,180,255,.2)",
+    lessons: [
+      { id: "sp_1", title: "Scale of the solar system", prompt: "The staggering scale of our solar system. If Earth were a marble, how far away would the Sun and Pluto be? Make the incomprehensible comprehensible." },
+      { id: "sp_2", title: "How stars are born and die", prompt: "The life cycle of a star: from stellar nurseries in nebulae to supernovas and black holes. Connect it to the fact that we're made of stardust." },
+      { id: "sp_3", title: "Black holes demystified", prompt: "What black holes actually are (not cosmic vacuum cleaners), how they form, what happens at the event horizon, and the recent first-ever image." },
+      { id: "sp_4", title: "The search for exoplanets", prompt: "How we find planets around other stars, what the Kepler and James Webb telescopes revealed, and the growing list of potentially habitable worlds." },
+      { id: "sp_5", title: "Dark matter and dark energy", prompt: "The 95% of the universe we can't see. What we know, what we don't, and why these mysteries are reshaping physics." },
+      { id: "sp_6", title: "The multiverse question", prompt: "Is our universe one of many? Explore cosmic inflation, quantum mechanics interpretations, and what a multiverse would actually mean." },
+    ],
+  },
+  {
+    id: "intro_investing",
+    icon: "💰",
+    title: "Intro to investing",
+    description: "The foundational concepts every investor needs, without the jargon.",
+    color: "#4ade80",
+    glow: "rgba(74,222,128,.2)",
+    lessons: [
+      { id: "iv_1", title: "Compound interest magic", prompt: "Compound interest as 'the eighth wonder of the world.' Show the math of starting early vs. late, and why time in the market beats timing the market." },
+      { id: "iv_2", title: "Index funds explained", prompt: "Why index funds beat most actively managed funds over time. John Bogle's revolutionary idea, expense ratios, and the power of diversification." },
+      { id: "iv_3", title: "Risk vs. reward", prompt: "The fundamental tradeoff in investing. Stocks vs. bonds, volatility vs. returns, and how your time horizon should shape your portfolio." },
+      { id: "iv_4", title: "Tax-advantaged accounts", prompt: "401(k)s, IRAs, Roth vs. traditional. How to use tax-advantaged accounts to keep more of your returns, with concrete examples." },
+    ],
+  },
+  {
+    id: "philosophy_101",
+    icon: "📜",
+    title: "Philosophy 101",
+    description: "The big questions that have shaped human thought for millennia.",
+    color: "#c084fc",
+    glow: "rgba(192,132,252,.2)",
+    lessons: [
+      { id: "ph_1", title: "The examined life", prompt: "Socrates and the Socratic method. Why 'the unexamined life is not worth living' and how questioning assumptions transformed philosophy." },
+      { id: "ph_2", title: "Stoicism for modern life", prompt: "Core Stoic principles from Marcus Aurelius, Epictetus, and Seneca. The dichotomy of control, memento mori, and practical techniques for resilience." },
+      { id: "ph_3", title: "The trolley problem", prompt: "The famous ethical thought experiment. Utilitarianism vs. deontology, and why our moral intuitions contradict themselves." },
+      { id: "ph_4", title: "Existentialism and meaning", prompt: "Sartre, Camus, and Kierkegaard. The idea that existence precedes essence, the absurd, and creating meaning in a universe that offers none." },
+      { id: "ph_5", title: "The hard problem of consciousness", prompt: "Why explaining consciousness is different from explaining the brain. David Chalmers' 'hard problem' and why it's one of the deepest mysteries in science." },
+    ],
+  },
+];
+
 const WAIT_TIMES = [
   { label: "2 min", value: 2, desc: "Elevator · Bus stop" },
   { label: "10 min", value: 10, desc: "Short commute" },
@@ -191,6 +254,13 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [learnView, setLearnView] = useState("topics");
+  const [selectedPath, setSelectedPath] = useState(null);
+  const [pathProgress, setPathProgress] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("liminal_path_progress") || "{}"); }
+    catch { return {}; }
+  });
+  const [activePathLesson, setActivePathLesson] = useState(null); // { pathId, lessonId } when in a path lesson
   const [onboardSlide, setOnboardSlide] = useState(() => {
     return localStorage.getItem("liminal_onboarded") ? 3 : 0;
   });
@@ -238,7 +308,44 @@ export default function App() {
     return fresh.sort(() => Math.random() - 0.5).slice(0, 6);
   }, [lessonHistory]);
 
-  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
+  const startLesson = async () => { setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false); setActivePathLesson(null); const pick = selectedTopics[Math.floor(Math.random() * selectedTopics.length)]; try { const data = await generateLesson(pick, selectedTime.value, user?.googleId); data._topicId = pick; setLesson(data); setScreen("lesson"); } catch (e) { console.error(e); setLesson({ ...FALLBACK, _topicId: pick }); setError("Showing a sample lesson — AI will be back shortly."); setScreen("lesson"); } };
+
+  const startPathLesson = async (path, pathLesson, duration = 10) => {
+    setError(null); setScreen("loading"); setQuizAnswer(null); setChatMessages([]); setShowChat(false);
+    setActivePathLesson({ pathId: path.id, lessonId: pathLesson.id });
+    setSelectedTime({ label: `${duration} min`, value: duration });
+    // Use the detailed lesson prompt as the topic for generation
+    const topicLabel = `${pathLesson.title}. ${pathLesson.prompt}`;
+    try {
+      const body = { topicLabel, duration, depth: "2-3 focused ideas" };
+      if (user?.googleId) body.googleId = user.googleId;
+      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      const parsed = extractJSON(data.text);
+      if (!parsed) throw new Error("Parse error");
+      parsed._topicId = pathLesson.title;
+      parsed._pathId = path.id;
+      parsed._pathLessonId = pathLesson.id;
+      setLesson(parsed);
+      setScreen("lesson");
+    } catch (e) {
+      console.error(e);
+      setLesson({ ...FALLBACK, _topicId: pathLesson.title, _pathId: path.id, _pathLessonId: pathLesson.id });
+      setError("Showing a sample lesson — AI will be back shortly.");
+      setScreen("lesson");
+    }
+  };
+
+  const markPathLessonComplete = (pathId, lessonId) => {
+    setPathProgress(prev => {
+      const pathDone = prev[pathId] || [];
+      if (pathDone.includes(lessonId)) return prev;
+      const updated = { ...prev, [pathId]: [...pathDone, lessonId] };
+      try { localStorage.setItem("liminal_path_progress", JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
   const submitQuiz = (idx) => { setQuizAnswer(idx); };
 
   const shareContent = async (text, title) => {
@@ -378,7 +485,19 @@ export default function App() {
         return [...prev, { topicId: lesson._topicId, lessonCount: 1, totalXp: xpEarned, correctCount: quizCorrect ? 1 : 0 }];
       });
     }
-    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setShowCustomTopic(false); setCustomTopicText(""); setScreen("home");
+    // Mark path lesson complete if applicable
+    if (lesson?._pathId && lesson?._pathLessonId) {
+      markPathLessonComplete(lesson._pathId, lesson._pathLessonId);
+    }
+    const wasInPath = lesson?._pathId;
+    const pathId = lesson?._pathId;
+    setSelectedTopics([]); setSelectedTime(null); setLesson(null); setError(null); setShowCustomTopic(false); setCustomTopicText(""); setActivePathLesson(null);
+    // If they completed a path lesson, return to path detail view instead of home
+    if (wasInPath) {
+      const path = PATHS.find(p => p.id === pathId);
+      if (path) { setSelectedPath(path); setScreen("pathDetail"); return; }
+    }
+    setScreen("home");
   };
 
   const totalLessonsAllTopics = topicProgress.reduce((s, p) => s + p.lessonCount, 0);
@@ -634,7 +753,16 @@ export default function App() {
               <GlowOrb top={220} left={220} color="rgba(160,100,255,0.08)" size={160} />
               <button onClick={() => setScreen("home")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 18, padding: 0, position: "relative", zIndex: 1 }}>← Back</button>
               <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 24, color: "#fff", marginBottom: 4, fontWeight: 200, position: "relative", zIndex: 1 }}>What draws you?</div>
-              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 18, position: "relative", zIndex: 1 }}>Choose a topic or create your own</div>
+              <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 14, position: "relative", zIndex: 1 }}>{learnView === "topics" ? "Choose a topic or create your own" : "Explore a multi-lesson journey"}</div>
+
+              {/* Toggle */}
+              <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", border: `0.5px solid ${C.border}`, borderRadius: 22, padding: 3, marginBottom: 14, position: "relative", zIndex: 1 }}>
+                <button onClick={() => setLearnView("topics")} style={{ flex: 1, padding: "8px 12px", background: learnView === "topics" ? C.gradient : "transparent", borderRadius: 20, border: "none", fontSize: 11, color: learnView === "topics" ? "#fff" : C.textSub, fontWeight: learnView === "topics" ? 500 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all .2s" }}>Topics</button>
+                <button onClick={() => setLearnView("paths")} style={{ flex: 1, padding: "8px 12px", background: learnView === "paths" ? C.gradient : "transparent", borderRadius: 20, border: "none", fontSize: 11, color: learnView === "paths" ? "#fff" : C.textSub, fontWeight: learnView === "paths" ? 500 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all .2s" }}>Paths</button>
+              </div>
+
+              {learnView === "topics" ? (
+                <>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, flex: 1, position: "relative", zIndex: 1 }}>
                 {TOPICS.map(t => { const sel = selectedTopics.includes(t.id) && !showCustomTopic; return (
                   <button key={t.id} onClick={() => toggleTopic(t.id)} style={{ background: sel ? `linear-gradient(135deg, ${t.glow} 0%, rgba(255,255,255,0.02) 100%)` : C.surface, border: `0.5px solid ${sel ? t.color+"44" : C.border}`, borderRadius: 16, padding: "14px 12px", cursor: "pointer", transition: "all .25s", textAlign: "left", boxShadow: sel ? `0 4px 20px ${t.glow}` : "none" }}>
@@ -687,6 +815,108 @@ export default function App() {
               )}
 
               <div style={{ marginTop: 16, position: "relative", zIndex: 1 }}><button className="btn-primary" disabled={selectedTopics.length === 0} onClick={() => setScreen("time")}>Choose your window →</button></div>
+                </>
+              ) : (
+                /* Paths list */
+                <div style={{ flex: 1, overflowY: "auto", position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {PATHS.map(p => {
+                    const completed = pathProgress[p.id] || [];
+                    const total = p.lessons.length;
+                    const done = completed.length;
+                    const pct = total > 0 ? (done / total) * 100 : 0;
+                    const inProgress = done > 0 && done < total;
+                    const isDone = done === total;
+                    return (
+                      <button key={p.id} onClick={() => { setSelectedPath(p); setScreen("pathDetail"); }} style={{
+                        display: "flex", alignItems: "center", gap: 12, padding: 14, background: inProgress ? `linear-gradient(135deg, ${p.glow} 0%, rgba(255,255,255,0.02) 100%)` : C.surface,
+                        border: `0.5px solid ${inProgress ? p.color + "33" : C.border}`, borderRadius: 14, cursor: "pointer", width: "100%", textAlign: "left", transition: "all .25s", fontFamily: "'Outfit',sans-serif"
+                      }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: inProgress ? `linear-gradient(135deg, ${p.color}, ${C.pink})` : `${p.color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{p.icon}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: "#fff", fontWeight: 400, marginBottom: 3 }}>{p.title}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, lineHeight: 1.5, marginBottom: 6 }}>{p.description}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ flex: 1, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1, overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: p.color, transition: "width .3s" }} />
+                            </div>
+                            <div style={{ fontSize: 9, color: isDone ? C.green : p.color, fontWeight: 500, flexShrink: 0 }}>{isDone ? "Complete" : `${done}/${total}`}</div>
+                          </div>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6"/></svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </Screen>
+          )}
+
+          {/* PATH DETAIL */}
+          {user && screen === "pathDetail" && selectedPath && (
+            <Screen style={{ padding: "16px 24px 24px", position: "relative" }}>
+              <GlowOrb top={-30} left={140} color={selectedPath.glow} size={180} />
+              <div style={{ flex: 1, overflowY: "auto", position: "relative", zIndex: 1 }}>
+                <button onClick={() => setScreen("topics")} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 18, padding: 0 }}>← Back to paths</button>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: `linear-gradient(135deg, ${selectedPath.color}, ${C.pink})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{selectedPath.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 9, color: selectedPath.color, textTransform: "uppercase", letterSpacing: 1.2, fontWeight: 600, marginBottom: 3 }}>Learning path</div>
+                    <div style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#fff", fontWeight: 200 }}>{selectedPath.title}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: C.textSub, lineHeight: 1.6, marginBottom: 18, fontWeight: 300 }}>{selectedPath.description}</div>
+
+                {/* Progress bar */}
+                {(() => {
+                  const completed = pathProgress[selectedPath.id] || [];
+                  const total = selectedPath.lessons.length;
+                  const done = completed.length;
+                  const pct = total > 0 ? (done / total) * 100 : 0;
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                      <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg, ${selectedPath.color}, ${C.pink})`, transition: "width .3s" }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: C.textSub }}>{done} of {total}</div>
+                    </div>
+                  );
+                })()}
+
+                {/* Lessons list */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {selectedPath.lessons.map((pl, i) => {
+                    const completed = pathProgress[selectedPath.id] || [];
+                    const isDone = completed.includes(pl.id);
+                    const isNext = !isDone && (i === 0 || completed.includes(selectedPath.lessons[i - 1]?.id));
+                    const isLocked = !isDone && !isNext;
+                    return (
+                      <button key={pl.id} onClick={isLocked ? undefined : () => startPathLesson(selectedPath, pl)} disabled={isLocked} style={{
+                        display: "flex", alignItems: "center", gap: 12, padding: 12, background: isDone ? "rgba(74,222,128,0.04)" : isNext ? `${selectedPath.color}14` : "rgba(255,255,255,0.02)",
+                        border: `0.5px solid ${isDone ? "rgba(74,222,128,0.15)" : isNext ? `${selectedPath.color}44` : "rgba(255,255,255,0.04)"}`, borderRadius: 12, cursor: isLocked ? "default" : "pointer", width: "100%", textAlign: "left",
+                        opacity: isLocked ? 0.5 : 1, transition: "all .2s", fontFamily: "'Outfit',sans-serif", boxShadow: isNext ? `0 0 16px ${selectedPath.color}22` : "none",
+                      }}>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: isDone ? "rgba(74,222,128,0.15)" : isNext ? `${selectedPath.color}33` : "rgba(255,255,255,0.04)", border: isNext ? `1px solid ${selectedPath.color}` : "none", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: isNext ? selectedPath.color : C.textMuted, fontWeight: 500 }}>
+                          {isDone ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> : isLocked ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> : i + 1}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: "#fff", fontWeight: 400 }}>{i + 1}. {pl.title}</div>
+                          <div style={{ fontSize: 9, color: isDone ? C.green : isNext ? selectedPath.color : C.textMuted, marginTop: 2 }}>{isDone ? "Completed" : isNext ? "Up next · 10 min" : "Locked · 10 min"}</div>
+                        </div>
+                        {!isLocked && !isDone && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={selectedPath.color} strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6"/></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Complete celebration */}
+                {(pathProgress[selectedPath.id] || []).length === selectedPath.lessons.length && (
+                  <div style={{ marginTop: 16, padding: 14, background: "rgba(74,222,128,0.06)", border: "0.5px solid rgba(74,222,128,0.2)", borderRadius: 12, textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: C.green, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600, marginBottom: 4 }}>Path complete</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 300 }}>🎓 You've mastered {selectedPath.title}</div>
+                  </div>
+                )}
+              </div>
             </Screen>
           )}
 
@@ -1255,7 +1485,7 @@ export default function App() {
         </div>
 
         {/* NAV — 4 tabs */}
-        {user && ["home","progress","history","topics","time"].includes(screen) && (
+        {user && ["home","progress","history","topics","time","pathDetail"].includes(screen) && (
           <div style={{ display: "flex", justifyContent: "space-around", padding: "8px 0 22px", borderTop: `0.5px solid ${C.border}`, flexShrink: 0, background: `linear-gradient(0deg, ${C.bg} 80%, transparent)`, position: "relative", zIndex: 11 }}>
             {[
               { label: "Home", s: "home", Icon: NavHome },
@@ -1263,9 +1493,9 @@ export default function App() {
               { label: "History", s: "history", Icon: NavHistory },
               { label: "Learn", s: "topics", Icon: NavLearn },
             ].map(n => (
-              <button key={n.label} onClick={() => { setShowAccountMenu(false); setShowAppMenu(false); setViewingLesson(null); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
-                <n.Icon active={screen === n.s || (n.s === "topics" && screen === "time")} />
-                <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && screen === "time")) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
+              <button key={n.label} onClick={() => { setShowAccountMenu(false); setShowAppMenu(false); setViewingLesson(null); setSelectedPath(null); setScreen(n.s); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 12px" }}>
+                <n.Icon active={screen === n.s || (n.s === "topics" && (screen === "time" || screen === "pathDetail"))} />
+                <span style={{ fontSize: 8, color: (screen === n.s || (n.s === "topics" && (screen === "time" || screen === "pathDetail"))) ? C.accent : C.textMuted, fontWeight: 500, letterSpacing: .8, textTransform: "uppercase" }}>{n.label}</span>
               </button>
             ))}
           </div>
